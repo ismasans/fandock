@@ -1,0 +1,17 @@
+version: "3.9"
+
+services:
+  fandock:
+    build: .
+    container_name: fandock
+    privileged: true          # required for sysfs PWM writes
+    ports:
+      - "8080:8080"
+    volumes:
+      - fandock_config:/app/config
+    environment:
+      - FANDOCK_SECRET=change_me_in_production
+    restart: unless-stopped
+
+volumes:
+  fandock_config:
