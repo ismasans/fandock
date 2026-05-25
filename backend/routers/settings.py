@@ -56,6 +56,9 @@ async def hardware_scan(_user: str = Depends(get_current_user)) -> HardwareScanR
             ))
 
     save_config(cfg)
+    from ..services.control_loop import _known_disks as _ckd
+    _ckd.clear()
+    _ckd.extend(disks)
     return HardwareScanResult(disks=disks, fans=fans)
 
 
@@ -102,6 +105,7 @@ class GlobalSettingsPayload(BaseModel):
     monitor_enabled: Optional[bool] = None
     control_enabled: Optional[bool] = None
     poll_interval_seconds: Optional[int] = None
+    unmonitored_disks: Optional[list[str]] = None
 
 @router.patch("/global")
 async def update_global_settings(

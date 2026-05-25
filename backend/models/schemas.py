@@ -97,6 +97,7 @@ class AppConfig(BaseModel):
     monitor_enabled: bool = True
     control_enabled: bool = True
     poll_interval_seconds: int = Field(default=10, ge=5, le=300)
+    unmonitored_disks: list[str] = Field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------

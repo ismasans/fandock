@@ -451,7 +451,7 @@ function buildDiskCfg() {
       <td><span style="font-size:12px;color:var(--color-text-tertiary);">${d.device}</span></td>
       <td><span class="disk-type-badge">${d.type}</span></td>
       <td><input class="cfg-input" id="dname-${i}" value="${name}"></td>
-      <td style="text-align:center;"><label class="toggle"><input type="checkbox" checked id="dmon-${i}"><span class="toggle-slider"></span></label></td>
+      <td><label class="toggle"><input type="checkbox" checked id="dmon-${i}"><span class="toggle-slider"></span></label></td>
       <td><span class="detected-badge">${T.smartOk}</span></td>`;
     tb.appendChild(tr);
   });
@@ -468,7 +468,7 @@ function buildFanCfg() {
       <td><code style="font-size:12px;color:var(--color-text-secondary);">${f.fan_id}</code></td>
       <td><input class="cfg-input" id="fname-${i}" value="${name}"></td>
       <td><span style="font-size:13px;color:var(--color-text-secondary);">${rpm}</span></td>
-      <td style="text-align:center;"><label class="toggle"><input type="checkbox" ${f.controlled ? 'checked' : ''} id="fctrl-${i}"><span class="toggle-slider"></span></label></td>
+      <td><label class="toggle"><input type="checkbox" ${f.controlled ? 'checked' : ''} id="fctrl-${i}"><span class="toggle-slider"></span></label></td>
       <td><button class="test-btn" id="test-${f.fan_id}" onclick="testFan('${f.fan_id}')"><i class="ti ti-player-play" style="font-size:11px;margin-right:3px;"></i>${T.test}</button></td>`;
     tb.appendChild(tr);
   });
@@ -517,10 +517,23 @@ async function saveSettings() {
   // Save friendly names
   const names = {};
   serverDisks.forEach((d, i) => {
-    const el = document.getElementById(`dname-${i}`);
-    if (el) names[d.device] = el.value;
+      const el = document.getElementById(`dname-${i}`);
+      if (el) names[d.device] = el.value;
   });
   await api('PUT', '/settings/friendly-names', { names });
+
+  // Save monitor toggles
+  const monitored = [];
+  const unmonitored = [];
+  serverDisks.forEach((d, i) => {
+      const el = document.getElementById(`dmon-${i}`);
+      if (el && !el.checked) unmonitored.push(d.device);
+      else monitored.push(d.device);
+  });
+  await api('PATCH', '/settings/global', { 
+      temp_unit: unit,
+      unmonitored_disks: unmonitored
+  });
 
   // Save fan names + controlled toggle
   for (let i = 0; i < serverFans.length; i++) {
