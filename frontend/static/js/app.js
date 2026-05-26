@@ -61,7 +61,8 @@ let unit = 'C';
 let alertEnabled = true;
 let chart = null;
 let curves = {};           // { fan_id: [{t, p}, ...] }
-let serverDisks = [];      // latest snapshot disks
+let serverDisks = [];      // dashboard snapshot
+let allDisks = [];         // all known disks (for settings)
 let serverFans = [];       // latest snapshot fans
 let settingsData = null;   // loaded settings
 let pollTimer = null;
@@ -71,6 +72,27 @@ const DISK_THRESHOLDS = {
   SSD:  { warm: 50, hot: 60, critical: 70 },
   NVMe: { warm: 55, hot: 65, critical: 75 },
 };
+
+// Show login only when ready
+document.addEventListener('DOMContentLoaded', () => {
+  if (!token) {
+    // Check if first run to show/hide default creds hint
+    fetch('/api/settings/', {method:'GET'}).then(r => {
+      if (r.status === 401) {
+        // Not logged in - check first_run via a public endpoint
+        document.getElementById('loginView').classList.remove('hidden');
+      }
+    });
+    document.getElementById('loginView').classList.remove('hidden');
+    // Hide hint by default, only show if server confirms first_run
+    fetch('/api/auth/first-run').then(r => r.json()).then(d => {
+      if (!d.first_run) document.getElementById('defaultCredsHint').style.display = 'none';
+    }).catch(() => {
+      document.getElementById('defaultCredsHint').style.display = 'none';
+    });
+  }
+});
+
 
 // ── API helpers ───────────────────────────────────────────────────────────────
 async function api(method, path, body) {
@@ -95,8 +117,102 @@ async function doLogin() {
   if (!data) { err.style.display = 'block'; return; }
   token = data.access_token;
   localStorage.setItem('fd_token', token);
+  if (data.first_run) {
+    showWizard();
+  } else {
+    showApp();
+  }
+}
+
+
+function showWizard() {
+  document.getElementById('loginView').classList.add('hidden');
+  document.getElementById('wizardView').classList.remove('hidden');
+  document.getElementById('wizardStep1').classList.remove('hidden');
+  document.getElementById('wizardStep2').classList.add('hidden');
+  // Hide default creds hint once wizard is shown
+  document.getElementById('defaultCredsHint').style.display = 'none';
+}
+
+async function wizardSetPassword() {
+  const next    = document.getElementById('wizPwdNew').value;
+  const confirm = document.getElementById('wizPwdConfirm').value;
+  const err     = document.getElementById('wizPwdErr');
+  err.style.display = 'none';
+  if (next.length < 6) { err.textContent = 'Password must be at least 6 characters.'; err.style.display = 'block'; return; }
+  if (next !== confirm) { err.textContent = T.pwdMismatch; err.style.display = 'block'; return; }
+  const data = await api('POST', '/auth/change-password', { current_password: 'fandock', new_password: next });
+  if (!data) { err.textContent = 'Error changing password. Try again.'; err.style.display = 'block'; return; }
+  // Scan hardware before showing step 2
+  const scan = await api('POST', '/settings/scan');
+  if (scan) {
+    serverDisks = scan.disks;
+    allDisks = scan.disks;
+    serverFans  = scan.fans;
+  }
+  document.getElementById('wizardStep1').classList.add('hidden');
+  document.getElementById('wizardStep2').classList.remove('hidden');
+  buildWizardLists();
+}
+
+function buildWizardLists() {
+  const diskList = document.getElementById('wizDiskList');
+  diskList.innerHTML = '';
+  serverDisks.forEach((d, i) => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:8px;';
+    row.innerHTML = `
+      <code style="font-size:12px;color:var(--color-text-secondary);min-width:80px;">${d.device}</code>
+      <span class="disk-type-badge">${d.type}</span>
+      <input class="cfg-input" id="wizDisk-${i}" placeholder="e.g. IronWolf 1" value="${d.friendly_name || ''}">`;
+    diskList.appendChild(row);
+  });
+
+  const fanList = document.getElementById('wizFanList');
+  fanList.innerHTML = '';
+  if (serverFans.length === 0) {
+    fanList.innerHTML = '<p style="font-size:12px;color:var(--color-text-tertiary);">No PWM-controllable fans detected. You can configure them later in Settings.</p>';
+    return;
+  }
+  serverFans.forEach((f, i) => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:8px;';
+    row.innerHTML = `
+      <code style="font-size:12px;color:var(--color-text-secondary);min-width:80px;">${f.fan_id}</code>
+      <input class="cfg-input" id="wizFan-${i}" placeholder="e.g. Front intake" value="${f.friendly_name || ''}">
+      <button class="test-btn" onclick="testFan('${f.fan_id}')"><i class="ti ti-player-play" style="font-size:11px;margin-right:3px;"></i>Test</button>`;
+    fanList.appendChild(row);
+  });
+}
+
+async function wizardFinish() {
+  // Save disk friendly names
+  const names = {};
+  serverDisks.forEach((d, i) => {
+    const el = document.getElementById(`wizDisk-${i}`);
+    if (el && el.value) names[d.device] = el.value;
+  });
+  if (Object.keys(names).length) await api('PUT', '/settings/friendly-names', { names });
+
+  // Save fan friendly names
+  for (let i = 0; i < serverFans.length; i++) {
+    const el = document.getElementById(`wizFan-${i}`);
+    if (el && el.value) {
+      await api('PATCH', `/settings/fans/${serverFans[i].fan_id}`, { friendly_name: el.value });
+    }
+  }
+
+  // Mark setup complete
+  await api('POST', '/auth/complete-setup');
+
+  // Hide default creds hint permanently
+  const hint = document.getElementById('defaultCredsHint');
+  if (hint) hint.style.display = 'none';
+
+  document.getElementById('wizardView').classList.add('hidden');
   showApp();
 }
+
 
 document.getElementById('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 
@@ -135,13 +251,26 @@ function closePwdModal() { document.getElementById('pwdModal').classList.add('hi
 // ── App bootstrap ─────────────────────────────────────────────────────────────
 function showApp() {
   document.getElementById('loginView').classList.add('hidden');
+  document.getElementById('wizardView').classList.add('hidden');
   document.getElementById('mainView').classList.remove('hidden');
+  const hint = document.getElementById('defaultCredsHint');
+  if (hint) hint.style.display = 'none';
   showView('dashboard', document.getElementById('navDash'));
   startPolling();
 }
 
-// Auto-login if token exists
-if (token) showApp();
+// Auto-login if token exists - verify with server first
+if (token) {
+  api('GET', '/settings/').then(data => {
+    if (!data || data.first_run) { 
+      token = null; 
+      localStorage.removeItem('fd_token');
+      document.getElementById('loginView').classList.remove('hidden');
+      return; 
+    }
+    showApp();
+  });
+}
 
 // ── Navigation ────────────────────────────────────────────────────────────────
 function showView(name, btn) {
@@ -204,7 +333,7 @@ function renderDiskGrid() {
   const grid = document.getElementById('diskGrid');
   grid.innerHTML = '';
   serverDisks.forEach(d => {
-    const name = d.friendly_name || d.device;
+    const name = (settingsData && settingsData.disk_friendly_names && settingsData.disk_friendly_names[d.device]) || d.friendly_name || d.device;
     const tempVal = unit === 'F' ? d.temperature_f : d.temperature_c;
     const tempStr = tempVal != null ? tempVal : '—';
     const card = document.createElement('div');
@@ -437,13 +566,17 @@ async function loadSettings() {
   document.getElementById('btnC').classList.toggle('active', unit === 'C');
   document.getElementById('btnF').classList.toggle('active', unit === 'F');
   document.getElementById('alertToggle').checked = alertEnabled;
-  buildDiskCfg();
+  if (settingsData.all_disks && settingsData.all_disks.length > 0) {
+  allDisks = settingsData.all_disks;
+  }
+  buildDiskCfg(settingsData);
   buildFanCfg();
 }
 
-function buildDiskCfg() {
+function buildDiskCfg(cfg) {
   const tb = document.getElementById('diskCfgBody'); tb.innerHTML = '';
-  serverDisks.forEach((d, i) => {
+  const diskList = allDisks.length > 0 ? allDisks : serverDisks;
+    diskList.forEach((d, i) => {
     const name = (settingsData && settingsData.disk_friendly_names && settingsData.disk_friendly_names[d.device]) || d.device;
     const tr = document.createElement('tr');
     tr.innerHTML = `
@@ -451,7 +584,7 @@ function buildDiskCfg() {
       <td><span style="font-size:12px;color:var(--color-text-tertiary);">${d.device}</span></td>
       <td><span class="disk-type-badge">${d.type}</span></td>
       <td><input class="cfg-input" id="dname-${i}" value="${name}"></td>
-      <td><label class="toggle"><input type="checkbox" checked id="dmon-${i}"><span class="toggle-slider"></span></label></td>
+      <td><label class="toggle"><input type="checkbox" ${!cfg.unmonitored_disks || !cfg.unmonitored_disks.includes(d.device) ? 'checked' : ''} id="dmon-${i}"><span class="toggle-slider"></span></label></td>
       <td><span class="detected-badge">${T.smartOk}</span></td>`;
     tb.appendChild(tr);
   });
@@ -507,8 +640,10 @@ async function rescanHardware() {
   badge.style.color = '';
   if (data) {
     serverDisks = data.disks;
+    allDisks = data.disks;
     serverFans  = data.fans;
-    buildDiskCfg();
+    settingsData = await api('GET', '/settings/');
+    buildDiskCfg(settingsData);
     buildFanCfg();
   }
 }
@@ -523,16 +658,10 @@ async function saveSettings() {
   await api('PUT', '/settings/friendly-names', { names });
 
   // Save monitor toggles
-  const monitored = [];
   const unmonitored = [];
   serverDisks.forEach((d, i) => {
-      const el = document.getElementById(`dmon-${i}`);
-      if (el && !el.checked) unmonitored.push(d.device);
-      else monitored.push(d.device);
-  });
-  await api('PATCH', '/settings/global', { 
-      temp_unit: unit,
-      unmonitored_disks: unmonitored
+    const el = document.getElementById(`dmon-${i}`);
+    if (el && !el.checked) unmonitored.push(d.device);
   });
 
   // Save fan names + controlled toggle
@@ -548,10 +677,13 @@ async function saveSettings() {
     }
   }
 
-  // Save global settings
+  // Save global settings (single call)
   alertEnabled = document.getElementById('alertToggle').checked;
-  await api('PATCH', '/settings/global', { temp_unit: unit });
-
+  await api('PATCH', '/settings/global', { 
+    temp_unit: unit,
+    unmonitored_disks: unmonitored
+  });
+  await fetchSnapshot();
   showView('dashboard', document.getElementById('navDash'));
 }
 

@@ -23,6 +23,7 @@ class ChangePasswordRequest(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+    first_run: bool = False
 
 
 # ---------------------------------------------------------------------------
@@ -98,6 +99,7 @@ class AppConfig(BaseModel):
     control_enabled: bool = True
     poll_interval_seconds: int = Field(default=10, ge=5, le=300)
     unmonitored_disks: list[str] = Field(default_factory=list)
+    first_run: bool = True
 
 
 # ---------------------------------------------------------------------------

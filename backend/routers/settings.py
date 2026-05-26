@@ -13,6 +13,7 @@ from ..services.config_service import load_config, save_config
 from ..services.smart_service import scan_disks
 from ..services.fan_service import scan_fans
 from ..models.schemas import HardwareScanResult, FanConfig, CurvePoint
+from ..services import control_loop
 
 router = APIRouter(prefix="/api/settings", tags=["settings"])
 
@@ -27,6 +28,9 @@ async def get_settings(_user: str = Depends(get_current_user)):
         "monitor_enabled": cfg.monitor_enabled,
         "control_enabled": cfg.control_enabled,
         "poll_interval_seconds": cfg.poll_interval_seconds,
+        "first_run": cfg.first_run,
+        "unmonitored_disks": cfg.unmonitored_disks,
+        "all_disks": [d.model_dump() for d in control_loop._known_disks],
     }
 
 
@@ -56,9 +60,8 @@ async def hardware_scan(_user: str = Depends(get_current_user)) -> HardwareScanR
             ))
 
     save_config(cfg)
-    from ..services.control_loop import _known_disks as _ckd
-    _ckd.clear()
-    _ckd.extend(disks)
+    control_loop._known_disks.clear()
+    control_loop._known_disks.extend(disks)
     return HardwareScanResult(disks=disks, fans=fans)
 
 
@@ -115,5 +118,8 @@ async def update_global_settings(
     cfg = load_config()
     for field, value in payload.model_dump(exclude_none=True).items():
         setattr(cfg, field, value)
+    # Always save unmonitored_disks even if empty list
+    if payload.unmonitored_disks is not None:
+        cfg.unmonitored_disks = payload.unmonitored_disks
     save_config(cfg)
     return {"ok": True}

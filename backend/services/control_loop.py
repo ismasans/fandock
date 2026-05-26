@@ -42,7 +42,8 @@ async def _control_loop() -> None:
                 continue
 
             # Read temperatures
-            readings = await read_temperatures(_known_disks, cfg.disk_friendly_names)
+            monitored = [d for d in _known_disks if d.device not in cfg.unmonitored_disks]
+            readings = await read_temperatures(monitored, cfg.disk_friendly_names)
 
             # Determine max temperature across all disks (used for fan curve)
             temps_c = [r.temperature_c for r in readings if r.temperature_c is not None]

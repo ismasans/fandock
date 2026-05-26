@@ -56,7 +56,7 @@ async def login(req: LoginRequest):
     cfg = load_config()
     if req.username != "admin" or not verify_password(req.password, cfg.password_hash):
         raise HTTPException(status_code=401, detail="Invalid credentials")
-    return TokenResponse(access_token=_create_token("admin"))
+    return TokenResponse(access_token=_create_token("admin"), first_run=cfg.first_run)
 
 
 @router.post("/change-password")
@@ -69,4 +69,17 @@ async def change_password(
         raise HTTPException(status_code=401, detail="Current password is incorrect")
     cfg.password_hash = hash_password(req.new_password)
     save_config(cfg)
+    return {"ok": True, "first_run": cfg.first_run}
+
+
+@router.post("/complete-setup")
+async def complete_setup(_user: str = Depends(get_current_user)):
+    cfg = load_config()
+    cfg.first_run = False
+    save_config(cfg)
     return {"ok": True}
+
+@router.get("/first-run")
+async def first_run_status():
+    cfg = load_config()
+    return {"first_run": cfg.first_run}

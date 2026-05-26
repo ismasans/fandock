@@ -10,7 +10,7 @@
 <body>
 
 <!-- LOGIN -->
-<div id="loginView" class="login-wrap">
+<div id="loginView" class="login-wrap hidden">
   <div class="login-card">
     <div class="login-logo">
       <i class="ti ti-wind" style="font-size:36px;color:#378ADD;"></i>
@@ -20,7 +20,43 @@
     <div class="login-err" id="loginErr">Incorrect username or password.</div>
     <div class="field"><label>Username</label><input type="text" id="loginUser" placeholder="admin" /></div>
     <div class="field"><label>Password</label><input type="password" id="loginPass" placeholder="••••••••" /></div>
+    <div id="defaultCredsHint" style="background:var(--color-background-info);border:0.5px solid var(--color-border-info);border-radius:var(--border-radius-md);padding:.625rem .875rem;font-size:12px;color:var(--color-text-info);margin-bottom:.75rem;">
+      Default credentials: <strong>admin</strong> / <strong>fandock</strong><br>
+      You will be asked to change your password after signing in.<br>
+      <a href="https://github.com/ismasans/fandock#password-reset" target="_blank" style="color:var(--color-text-info);font-size:11px;margin-top:4px;display:inline-block;">Forgot your password?</a>
+    </div>
     <button class="btn btn-primary" style="width:100%;margin-top:.25rem;padding:9px;" onclick="doLogin()">Sign in</button>
+  </div>
+</div>
+
+<!-- SETUP WIZARD -->
+<div id="wizardView" class="login-wrap hidden">
+  <div class="login-card" style="max-width:480px;">
+    <div class="login-logo">
+      <i class="ti ti-wind" style="font-size:36px;color:#378ADD;"></i>
+      <h1>Welcome to FanDock</h1>
+      <p>Let's identify your hardware before you start.</p>
+    </div>
+
+    <!-- Step 1: Change password -->
+    <div id="wizardStep1">
+      <p style="font-size:13px;color:var(--color-text-secondary);margin-bottom:1rem;">First, set a secure password to protect access to FanDock.</p>
+      <div class="field"><label>New password</label><input type="password" id="wizPwdNew" /></div>
+      <div class="field"><label>Confirm new password</label><input type="password" id="wizPwdConfirm" /></div>
+      <div class="login-err" id="wizPwdErr"></div>
+      <button class="btn btn-primary" style="width:100%;padding:9px;margin-top:.25rem;" onclick="wizardSetPassword()">Set password & continue</button>
+    </div>
+
+    <!-- Step 2: Hardware scan -->
+    <div id="wizardStep2" class="hidden">
+      <p style="font-size:13px;color:var(--color-text-secondary);margin-bottom:1rem;">FanDock has scanned your hardware. Assign friendly names to identify each device.</p>
+      <p class="section-label" style="margin-top:1rem;">Disks</p>
+      <div id="wizDiskList"></div>
+      <p class="section-label" style="margin-top:1rem;">Fans</p>
+      <div id="wizFanList"></div>
+      <p style="font-size:11px;color:var(--color-text-tertiary);margin-top:1rem;">Fan curves will use optimized defaults. You can adjust them later in the Curves section.</p>
+      <button class="btn btn-primary" style="width:100%;padding:9px;margin-top:1rem;" onclick="wizardFinish()">Finish setup</button>
+    </div>
   </div>
 </div>
 
