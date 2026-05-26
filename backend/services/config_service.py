@@ -44,3 +44,12 @@ def verify_password(plain: str, hashed: str) -> bool:
 
 def hash_password(plain: str) -> str:
     return _pwd_ctx.hash(plain)
+
+
+def reset_password() -> None:
+    """Reset admin password to 'fandock' and force first_run wizard."""
+    cfg = load_config()
+    cfg.password_hash = hash_password("fandock")
+    cfg.first_run = True
+    save_config(cfg)
+    print("Password reset to 'fandock'. First-run wizard will appear on next login.")
