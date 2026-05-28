@@ -50,7 +50,7 @@ async def _control_loop() -> None:
             max_temp = max(temps_c) if temps_c else 0.0
 
             # Read fan statuses
-            fan_statuses = read_fan_statuses(cfg.fans)
+            fan_statuses = read_fan_statuses(cfg.fans, cfg.unmonitored_fans)
 
             # Apply curves if control is enabled
             if cfg.control_enabled:

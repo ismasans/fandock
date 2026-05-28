@@ -130,9 +130,11 @@ async def test_fan(pwm_path: str, test_pwm: int = 255, duration_seconds: int = 3
 # Fan status snapshot
 # ---------------------------------------------------------------------------
 
-def read_fan_statuses(fan_configs: list[FanConfig]) -> list[FanStatus]:
+def read_fan_statuses(fan_configs: list[FanConfig], unmonitored: list[str] = []) -> list[FanStatus]:
     statuses: list[FanStatus] = []
     for fc in fan_configs:
+        if fc.fan_id in unmonitored:
+            continue
         statuses.append(FanStatus(
             fan_id=fc.fan_id,
             friendly_name=fc.friendly_name,

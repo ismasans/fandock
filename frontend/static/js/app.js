@@ -570,7 +570,7 @@ async function loadSettings() {
   allDisks = settingsData.all_disks;
   }
   buildDiskCfg(settingsData);
-  buildFanCfg();
+  buildFanCfg(settingsData);
 }
 
 function buildDiskCfg(cfg) {
@@ -581,7 +581,7 @@ function buildDiskCfg(cfg) {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td><code style="font-size:12px;color:var(--color-text-secondary);">${d.device}</code></td>
-      <td><span style="font-size:12px;color:var(--color-text-tertiary);">${d.device}</span></td>
+      <td><span style="font-size:12px;color:var(--color-text-tertiary);">${d.model || '—'}</span></td>
       <td><span class="disk-type-badge">${d.type}</span></td>
       <td><input class="cfg-input" id="dname-${i}" value="${name}"></td>
       <td><label class="toggle"><input type="checkbox" ${!cfg.unmonitored_disks || !cfg.unmonitored_disks.includes(d.device) ? 'checked' : ''} id="dmon-${i}"><span class="toggle-slider"></span></label></td>
@@ -590,17 +590,19 @@ function buildDiskCfg(cfg) {
   });
 }
 
-function buildFanCfg() {
+function buildFanCfg(cfg) {
   const tb = document.getElementById('fanCfgBody'); tb.innerHTML = '';
+  const unmonitored = (cfg && cfg.unmonitored_fans) || [];
   serverFans.forEach((f, i) => {
-    const pct = Math.round(f.current_pwm / 255 * 100);
     const name = f.friendly_name || f.fan_id;
     const rpm = f.current_rpm != null ? `${f.current_rpm} rpm` : '— rpm';
+    const monitored = !unmonitored.includes(f.fan_id);
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td><code style="font-size:12px;color:var(--color-text-secondary);">${f.fan_id}</code></td>
       <td><input class="cfg-input" id="fname-${i}" value="${name}"></td>
       <td><span style="font-size:13px;color:var(--color-text-secondary);">${rpm}</span></td>
+      <td><label class="toggle"><input type="checkbox" ${monitored ? 'checked' : ''} id="fmon-${i}"><span class="toggle-slider"></span></label></td>
       <td><label class="toggle"><input type="checkbox" ${f.controlled ? 'checked' : ''} id="fctrl-${i}"><span class="toggle-slider"></span></label></td>
       <td><button class="test-btn" id="test-${f.fan_id}" onclick="testFan('${f.fan_id}')"><i class="ti ti-player-play" style="font-size:11px;margin-right:3px;"></i>${T.test}</button></td>`;
     tb.appendChild(tr);
@@ -644,7 +646,7 @@ async function rescanHardware() {
     serverFans  = data.fans;
     settingsData = await api('GET', '/settings/');
     buildDiskCfg(settingsData);
-    buildFanCfg();
+    buildFanCfg(settingsData);
   }
 }
 
@@ -664,6 +666,12 @@ async function saveSettings() {
     if (el && !el.checked) unmonitored.push(d.device);
   });
 
+  const unmonitored_fans = [];
+  serverFans.forEach((f, i) => {
+      const el = document.getElementById(`fmon-${i}`);
+      if (el && !el.checked) unmonitored_fans.push(f.fan_id);
+  });
+
   // Save fan names + controlled toggle
   for (let i = 0; i < serverFans.length; i++) {
     const f = serverFans[i];
@@ -681,7 +689,8 @@ async function saveSettings() {
   alertEnabled = document.getElementById('alertToggle').checked;
   await api('PATCH', '/settings/global', { 
     temp_unit: unit,
-    unmonitored_disks: unmonitored
+    unmonitored_disks: unmonitored,
+    unmonitored_fans: unmonitored_fans,
   });
   await fetchSnapshot();
   showView('dashboard', document.getElementById('navDash'));

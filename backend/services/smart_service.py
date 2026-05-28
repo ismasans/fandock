@@ -48,7 +48,7 @@ def _list_block_devices() -> list[str]:
         devices = []
         for line in result.stdout.strip().splitlines():
             parts = line.split()
-            if len(parts) >= 2 and parts[1] in ("disk",):
+            if len(parts) >= 2 and parts[1] in ("disk",) and not parts[0].startswith("zd"):
                 name = parts[0]
                 prefix = "/dev/nvme" if name.startswith("nvme") else "/dev/"
                 devices.append(f"{prefix}{name}" if not name.startswith("nvme") else f"/dev/{name}")
