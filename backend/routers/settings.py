@@ -79,6 +79,7 @@ async def update_friendly_names(
 ):
     cfg = load_config()
     cfg.disk_friendly_names.update(payload.names)
+    # Remove old /dev/sdX keys if serial key exists for same disk
     save_config(cfg)
     return {"ok": True}
 

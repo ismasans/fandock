@@ -192,7 +192,7 @@ async function wizardFinish() {
   const names = {};
   serverDisks.forEach((d, i) => {
     const el = document.getElementById(`wizDisk-${i}`);
-    if (el && el.value) names[d.device] = el.value;
+    if (el && el.value) names[d.serial] = el.value;
   });
   if (Object.keys(names).length) await api('PUT', '/settings/friendly-names', { names });
 
@@ -582,11 +582,12 @@ function buildDiskCfg(cfg) {
   const tb = document.getElementById('diskCfgBody'); tb.innerHTML = '';
   const diskList = allDisks.length > 0 ? allDisks : serverDisks;
   diskList.forEach((d, i) => {
-    const name = (settingsData && settingsData.disk_friendly_names && settingsData.disk_friendly_names[d.device]) || d.device;
+    const name = (settingsData && settingsData.disk_friendly_names && (settingsData.disk_friendly_names[d.serial] || settingsData.disk_friendly_names[d.device])) || d.device;
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td><code style="font-size:12px;color:var(--color-text-secondary);">${d.device}</code></td>
       <td><span style="font-size:12px;color:var(--color-text-tertiary);">${d.model || '—'}</span></td>
+      <td><span style="font-size:11px;color:var(--color-text-tertiary);">${d.serial || '—'}</span></td>
       <td><span class="disk-type-badge">${d.type}</span></td>
       <td><input class="cfg-input" id="dname-${i}" value="${name}"></td>
       <td><label class="toggle"><input type="checkbox" ${!cfg.unmonitored_disks || !cfg.unmonitored_disks.includes(d.device) ? 'checked' : ''} id="dmon-${i}"><span class="toggle-slider"></span></label></td>
@@ -608,11 +609,23 @@ function buildFanCfg(cfg) {
       <td><code style="font-size:12px;color:var(--color-text-secondary);">${f.fan_id}</code></td>
       <td><input class="cfg-input" id="fname-${i}" value="${name}"></td>
       <td><span style="font-size:13px;color:var(--color-text-secondary);">${rpm}</span></td>
-      <td><label class="toggle"><input type="checkbox" ${monitored ? 'checked' : ''} id="fmon-${i}"><span class="toggle-slider"></span></label></td>
+      <td><label class="toggle"><input type="checkbox" ${monitored ? 'checked' : ''} id="fmon-${i}" onchange="onFanMonitorChange(${i})"><span class="toggle-slider"></span></label></td>
       <td><label class="toggle"><input type="checkbox" ${f.controlled ? 'checked' : ''} id="fctrl-${i}"><span class="toggle-slider"></span></label></td>
       <td><button class="test-btn" id="test-${f.fan_id}" onclick="testFan('${f.fan_id}')"><i class="ti ti-player-play" style="font-size:11px;margin-right:3px;"></i>${T.test}</button></td>`;
     tb.appendChild(tr);
   });
+}
+
+function onFanMonitorChange(i) {
+  const monEl = document.getElementById(`fmon-${i}`);
+  const ctrlEl = document.getElementById(`fctrl-${i}`);
+  if (!monEl || !ctrlEl) return;
+  if (!monEl.checked) {
+    ctrlEl.checked = false;
+    ctrlEl.disabled = true;
+  } else {
+    ctrlEl.disabled = false;
+  }
 }
 
 async function testFan(id) {
@@ -660,9 +673,10 @@ async function rescanHardware() {
 async function saveSettings() {
   // Save friendly names
   const names = {};
-  serverDisks.forEach((d, i) => {
+  const diskListForNames = allDisks.length > 0 ? allDisks : serverDisks;
+  diskListForNames.forEach((d, i) => {
       const el = document.getElementById(`dname-${i}`);
-      if (el) names[d.device] = el.value;
+      if (el) names[d.serial] = el.value;
   });
   await api('PUT', '/settings/friendly-names', { names });
 

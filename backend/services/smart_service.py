@@ -180,6 +180,6 @@ async def read_temperatures(
             temperature_f=temp_f,
             type=disk.type,
             status=status,
-            friendly_name=friendly_names.get(disk.device),
+            friendly_name=friendly_names.get(disk.serial) or friendly_names.get(disk.device),
         ))
     return readings
