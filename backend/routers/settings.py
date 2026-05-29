@@ -64,6 +64,8 @@ async def hardware_scan(_user: str = Depends(get_current_user)) -> HardwareScanR
     save_config(cfg)
     control_loop._known_disks.clear()
     control_loop._known_disks.extend(disks)
+    control_loop._known_fans.clear()
+    control_loop._known_fans.extend(fans)
     return HardwareScanResult(disks=disks, fans=fans)
 
 

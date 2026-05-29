@@ -10,7 +10,7 @@ import logging
 
 from .config_service import load_config
 from .smart_service import scan_disks, read_temperatures
-from .fan_service import enable_pwm_control, set_pwm, interpolate_pwm, read_fan_statuses
+from .fan_service import enable_pwm_control, set_pwm, interpolate_pwm, read_fan_statuses, scan_fans
 from ..models.schemas import DiskInfo
 
 logger = logging.getLogger("fandock.controller")
@@ -18,7 +18,6 @@ logger = logging.getLogger("fandock.controller")
 # Module-level cache so the dashboard can read latest data without re-querying
 _last_snapshot: dict = {"disks": [], "fans": [], "any_critical": False}
 _known_disks: list[DiskInfo] = []
-from .fan_service import scan_fans as _scan_fans
 _known_fans: list = []
 
 async def get_last_snapshot() -> dict:
@@ -26,7 +25,7 @@ async def get_last_snapshot() -> dict:
 
 
 async def _control_loop() -> None:
-    global _known_disks, _last_snapshot
+    global _known_disks, _known_fans, _last_snapshot
 
     logger.info("FanDock control loop starting…")
 
@@ -34,6 +33,7 @@ async def _control_loop() -> None:
     _known_disks = await scan_disks()
     _known_fans = scan_fans()
     logger.info(f"Discovered {len(_known_disks)} disk(s): {[d.device for d in _known_disks]}")
+    logger.info(f"Discovered {len(_known_fans)} fan(s): {[f.fan_id for f in _known_fans]}")
 
     while True:
         try:
