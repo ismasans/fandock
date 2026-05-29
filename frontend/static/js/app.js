@@ -63,6 +63,7 @@ let chart = null;
 let curves = {};           // { fan_id: [{t, p}, ...] }
 let serverDisks = [];      // dashboard snapshot
 let allDisks = [];         // all known disks (for settings)
+let allFans = [];          // all known fans (for settings)
 let serverFans = [];       // latest snapshot fans
 let settingsData = null;   // loaded settings
 let pollTimer = null;
@@ -149,6 +150,7 @@ async function wizardSetPassword() {
     serverDisks = scan.disks;
     allDisks = scan.disks;
     serverFans  = scan.fans;
+    allFans = scan.fans;
   }
   document.getElementById('wizardStep1').classList.add('hidden');
   document.getElementById('wizardStep2').classList.remove('hidden');
@@ -481,7 +483,7 @@ function buildChart() {
         },
       ],
     },
-    plugins: [ChartDataLabels !== undefined ? undefined : null].filter(Boolean),
+    plugins: [],
     options: {
       responsive: true,
       maintainAspectRatio: false,
@@ -567,7 +569,10 @@ async function loadSettings() {
   document.getElementById('btnF').classList.toggle('active', unit === 'F');
   document.getElementById('alertToggle').checked = alertEnabled;
   if (settingsData.all_disks && settingsData.all_disks.length > 0) {
-  allDisks = settingsData.all_disks;
+    allDisks = settingsData.all_disks;
+  }
+  if (settingsData.all_fans && settingsData.all_fans.length > 0) {
+    allFans = settingsData.all_fans;
   }
   buildDiskCfg(settingsData);
   buildFanCfg(settingsData);
@@ -576,7 +581,7 @@ async function loadSettings() {
 function buildDiskCfg(cfg) {
   const tb = document.getElementById('diskCfgBody'); tb.innerHTML = '';
   const diskList = allDisks.length > 0 ? allDisks : serverDisks;
-    diskList.forEach((d, i) => {
+  diskList.forEach((d, i) => {
     const name = (settingsData && settingsData.disk_friendly_names && settingsData.disk_friendly_names[d.device]) || d.device;
     const tr = document.createElement('tr');
     tr.innerHTML = `
@@ -593,7 +598,8 @@ function buildDiskCfg(cfg) {
 function buildFanCfg(cfg) {
   const tb = document.getElementById('fanCfgBody'); tb.innerHTML = '';
   const unmonitored = (cfg && cfg.unmonitored_fans) || [];
-  serverFans.forEach((f, i) => {
+  const fanList = allFans.length > 0 ? allFans : serverFans;
+  fanList.forEach((f, i) => {
     const name = f.friendly_name || f.fan_id;
     const rpm = f.current_rpm != null ? `${f.current_rpm} rpm` : '— rpm';
     const monitored = !unmonitored.includes(f.fan_id);
@@ -644,6 +650,7 @@ async function rescanHardware() {
     serverDisks = data.disks;
     allDisks = data.disks;
     serverFans  = data.fans;
+    allFans = data.fans;
     settingsData = await api('GET', '/settings/');
     buildDiskCfg(settingsData);
     buildFanCfg(settingsData);
@@ -661,13 +668,15 @@ async function saveSettings() {
 
   // Save monitor toggles
   const unmonitored = [];
-  serverDisks.forEach((d, i) => {
-    const el = document.getElementById(`dmon-${i}`);
-    if (el && !el.checked) unmonitored.push(d.device);
+  const diskListForSave = allDisks.length > 0 ? allDisks : serverDisks;
+  diskListForSave.forEach((d, i) => {
+      const el = document.getElementById(`dmon-${i}`);
+      if (el && !el.checked) unmonitored.push(d.device);
   });
 
   const unmonitored_fans = [];
-  serverFans.forEach((f, i) => {
+  const fanListForSave = allFans.length > 0 ? allFans : serverFans;
+  fanListForSave.forEach((f, i) => {
       const el = document.getElementById(`fmon-${i}`);
       if (el && !el.checked) unmonitored_fans.push(f.fan_id);
   });

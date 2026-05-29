@@ -18,7 +18,8 @@ logger = logging.getLogger("fandock.controller")
 # Module-level cache so the dashboard can read latest data without re-querying
 _last_snapshot: dict = {"disks": [], "fans": [], "any_critical": False}
 _known_disks: list[DiskInfo] = []
-
+from .fan_service import scan_fans as _scan_fans
+_known_fans: list = []
 
 async def get_last_snapshot() -> dict:
     return _last_snapshot
@@ -31,6 +32,7 @@ async def _control_loop() -> None:
 
     # Initial disk scan
     _known_disks = await scan_disks()
+    _known_fans = scan_fans()
     logger.info(f"Discovered {len(_known_disks)} disk(s): {[d.device for d in _known_disks]}")
 
     while True:
