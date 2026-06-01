@@ -335,7 +335,7 @@ function renderDiskGrid() {
   const grid = document.getElementById('diskGrid');
   grid.innerHTML = '';
   serverDisks.forEach(d => {
-    const name = (settingsData && settingsData.disk_friendly_names && settingsData.disk_friendly_names[d.device]) || d.friendly_name || d.device;
+    const name = (settingsData && settingsData.disk_friendly_names && (settingsData.disk_friendly_names[d.serial] || settingsData.disk_friendly_names[d.device])) || d.friendly_name || d.device;
     const tempVal = unit === 'F' ? d.temperature_f : d.temperature_c;
     const tempStr = tempVal != null ? tempVal : '—';
     const card = document.createElement('div');
@@ -696,10 +696,11 @@ async function saveSettings() {
   });
 
   // Save fan names + controlled toggle
-  for (let i = 0; i < serverFans.length; i++) {
-    const f = serverFans[i];
-    const nameEl = document.getElementById(`fname-${i}`);
-    const ctrlEl = document.getElementById(`fctrl-${i}`);
+  const fanListForSave2 = allFans.length > 0 ? allFans : serverFans;
+    for (let i = 0; i < fanListForSave2.length; i++) {
+        const f = fanListForSave2[i];
+        const nameEl = document.getElementById(`fname-${i}`);
+        const ctrlEl = document.getElementById(`fctrl-${i}`);
     if (nameEl || ctrlEl) {
       await api('PATCH', `/settings/fans/${f.fan_id}`, {
         friendly_name: nameEl ? nameEl.value : undefined,
