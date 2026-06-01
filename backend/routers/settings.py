@@ -32,7 +32,7 @@ async def get_settings(_user: str = Depends(get_current_user)):
         "unmonitored_disks": cfg.unmonitored_disks,
         "unmonitored_fans": cfg.unmonitored_fans,
         "all_disks": [d.model_dump() for d in control_loop._known_disks],
-        "all_fans": [f.model_dump() for f in control_loop._known_fans],
+        "all_fans": [fc.model_dump() for fc in cfg.fans],
     }
 
 
