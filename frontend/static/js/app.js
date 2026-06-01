@@ -613,6 +613,14 @@ function buildFanCfg(cfg) {
       <td><label class="toggle"><input type="checkbox" ${f.controlled ? 'checked' : ''} id="fctrl-${i}"><span class="toggle-slider"></span></label></td>
       <td><button class="test-btn" id="test-${f.fan_id}" onclick="testFan('${f.fan_id}')"><i class="ti ti-player-play" style="font-size:11px;margin-right:3px;"></i>${T.test}</button></td>`;
     tb.appendChild(tr);
+    // Disable control toggle if not monitored
+    if (!monitored) {
+      const ctrlEl = document.getElementById(`fctrl-${i}`);
+      if (ctrlEl) {
+        ctrlEl.checked = false;
+        ctrlEl.disabled = true;
+      }
+    }
   });
 }
 
