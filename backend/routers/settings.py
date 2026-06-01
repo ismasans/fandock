@@ -21,6 +21,16 @@ router = APIRouter(prefix="/api/settings", tags=["settings"])
 @router.get("/")
 async def get_settings(_user: str = Depends(get_current_user)):
     cfg = load_config()
+    # Merge config (controlled, friendly_name) with live data (rpm, pwm)
+    known_map = {f.fan_id: f for f in control_loop._known_fans}
+    all_fans_merged = []
+    for fc in cfg.fans:
+        d = fc.model_dump()
+        if fc.fan_id in known_map:
+            kf = known_map[fc.fan_id]
+            d['current_rpm'] = kf.current_rpm
+            d['current_pwm'] = kf.current_pwm
+        all_fans_merged.append(d)
     return {
         "fans": [fc.model_dump() for fc in cfg.fans],
         "disk_friendly_names": cfg.disk_friendly_names,
@@ -32,16 +42,6 @@ async def get_settings(_user: str = Depends(get_current_user)):
         "unmonitored_disks": cfg.unmonitored_disks,
         "unmonitored_fans": cfg.unmonitored_fans,
         "all_disks": [d.model_dump() for d in control_loop._known_disks],
-        # Merge config (controlled, friendly_name) with live data (rpm, pwm)
-        known_map = {f.fan_id: f for f in control_loop._known_fans}
-        all_fans_merged = []
-        for fc in cfg.fans:
-            d = fc.model_dump()
-            if fc.fan_id in known_map:
-                kf = known_map[fc.fan_id]
-                d['current_rpm'] = kf.current_rpm
-                d['current_pwm'] = kf.current_pwm
-            all_fans_merged.append(d)
         "all_fans": all_fans_merged,
     }
 
