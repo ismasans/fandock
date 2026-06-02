@@ -109,6 +109,9 @@ def enable_pwm_control(pwm_path: str) -> bool:
     """Set pwmN_enable = 1 (manual control)."""
     return _write_sysfs(pwm_path + "_enable", 1)
 
+def release_pwm_control(pwm_path: str) -> bool:
+    """Return fan to Smart Fan / BIOS control (pwmN_enable = 5)."""
+    return _write_sysfs(pwm_path + "_enable", 5)
 
 def set_pwm(pwm_path: str, value: int) -> bool:
     """Write PWM value (0-255)."""

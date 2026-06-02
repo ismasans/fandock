@@ -10,7 +10,7 @@ import logging
 
 from .config_service import load_config
 from .smart_service import scan_disks, read_temperatures
-from .fan_service import enable_pwm_control, set_pwm, interpolate_pwm, read_fan_statuses, scan_fans
+from .fan_service import enable_pwm_control, set_pwm, interpolate_pwm, read_fan_statuses, scan_fans, release_pwm_control
 from ..models.schemas import DiskInfo
 
 logger = logging.getLogger("fandock.controller")
@@ -59,7 +59,11 @@ async def _control_loop() -> None:
             # Apply curves if control is enabled
             if cfg.control_enabled:
                 for fc in cfg.fans:
-                    if not fc.enabled or not fc.controlled:
+                    if not fc.enabled:
+                        continue
+                    if not fc.controlled:
+                        # Return control to BIOS/Smart Fan
+                        release_pwm_control(fc.pwm_path)
                         continue
                     if not fc.curve:
                         continue
