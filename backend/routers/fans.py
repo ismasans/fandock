@@ -36,8 +36,15 @@ async def update_curve(fan_id: str, curve: FanCurve, _user: str = Depends(get_cu
     cfg = load_config()
     for fc in cfg.fans:
         if fc.fan_id == fan_id:
-            # Sort by temperature before saving
-            fc.curve = sorted(curve.points, key=lambda p: p.temp_c)
+            # Sort by temperature, enforce monotonic PWM values, force last point to 100%
+            sorted_points = sorted(curve.points, key=lambda p: p.temp_c)
+            # Ensure PWM values are monotonically increasing
+            for i in range(1, len(sorted_points)):
+                if sorted_points[i].pwm_pct < sorted_points[i-1].pwm_pct:
+                    sorted_points[i].pwm_pct = sorted_points[i-1].pwm_pct
+            # Last point always 100%
+            sorted_points[-1].pwm_pct = 100.0
+            fc.curve = sorted_points
             save_config(cfg)
             return {"ok": True}
     raise HTTPException(404, f"Fan {fan_id} not found")
