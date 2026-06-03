@@ -176,6 +176,7 @@ async def read_temperatures(
 
         readings.append(DiskTemperatureReading(
             device=disk.device,
+            serial=disk.serial,
             temperature_c=temp,
             temperature_f=temp_f,
             type=disk.type,

@@ -41,6 +41,7 @@ async def get_settings(_user: str = Depends(get_current_user)):
         "first_run": cfg.first_run,
         "unmonitored_disks": cfg.unmonitored_disks,
         "unmonitored_fans": cfg.unmonitored_fans,
+        "excluded_from_curve_disks": cfg.excluded_from_curve_disks,
         "all_disks": [d.model_dump() for d in control_loop._known_disks],
         "all_fans": all_fans_merged,
     }
@@ -125,7 +126,7 @@ class GlobalSettingsPayload(BaseModel):
     poll_interval_seconds: Optional[int] = None
     unmonitored_disks: Optional[list[str]] = None
     unmonitored_fans: Optional[list[str]] = None
-
+    excluded_from_curve_disks: Optional[list[str]] = None
 @router.patch("/global")
 async def update_global_settings(
     payload: GlobalSettingsPayload,

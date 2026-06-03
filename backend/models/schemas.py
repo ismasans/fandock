@@ -42,6 +42,7 @@ class DiskInfo(BaseModel):
 
 class DiskTemperatureReading(BaseModel):
     device: str
+    serial: Optional[str] = None
     temperature_c: Optional[float]
     temperature_f: Optional[float]
     type: DiskType
@@ -100,6 +101,7 @@ class AppConfig(BaseModel):
     poll_interval_seconds: int = Field(default=10, ge=5, le=300)
     unmonitored_disks: list[str] = Field(default_factory=list)
     unmonitored_fans: list[str] = Field(default_factory=list)
+    excluded_from_curve_disks: list[str] = Field(default_factory=list)
     first_run: bool = True
 
 
