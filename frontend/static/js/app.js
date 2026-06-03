@@ -759,7 +759,6 @@ async function saveSettings() {
         const f = fanListForSave2[i];
         const nameEl = document.getElementById(`fname-${i}`);
         const ctrlEl = document.getElementById(`fctrl-${i}`);
-        console.log(`fan${i} ctrl:`, ctrlEl ? ctrlEl.checked : 'null', 'disabled:', ctrlEl ? ctrlEl.disabled : 'null');
     if (nameEl || ctrlEl) {
       await api('PATCH', `/settings/fans/${f.fan_id}`, {
         friendly_name: nameEl ? nameEl.value : undefined,
