@@ -56,7 +56,7 @@ def _discover_hwmon_fans() -> list[FanStatus]:
             rpm_path = f"{hwmon_dir}/fan{num}_input"
 
             fans.append(FanStatus(
-                fan_id=f"fan{idx}",
+                ffan_id=f"fan{num}",
                 pwm_path=pwm_path,
                 rpm_path=rpm_path if os.path.exists(rpm_path) else None,
                 current_pwm=_read_sysfs_int(pwm_path) or 0,
