@@ -502,10 +502,20 @@ function buildChart() {
           showTooltip: true,
           onDragStart: () => {},
           onDrag: (e, di, i, val) => {
-            if (di === 0 && curves[fan]) curves[fan][i] = { t: Math.round(fromDisplay(val.x)), p: Math.round(val.y) };
+            if (di === 0 && curves[fan]) {
+                const pts = curves[fan] || [];
+                if (i === pts.length - 1) return false;
+                curves[fan][i] = { t: Math.round(fromDisplay(val.x)), p: Math.round(val.y) };
+            }
             updateBadge();
           },
-          onDragEnd: () => { sortCurve(fan); buildChart(); renderPointRows(false); },
+          onDragEnd: () => { 
+            const pts = curves[fan] || [];
+            if (pts.length > 0) pts[pts.length - 1].p = 100;
+            sortCurve(fan); 
+            buildChart(); 
+            renderPointRows(false); 
+          },
         },
       },
       scales: {
@@ -578,7 +588,10 @@ async function saveCurve() {
   if (minP < 20 && !confirm(T.curveBelow20)) return;
   const points = (curves[fan] || []).map(p => ({ temp_c: p.t, pwm_pct: p.p }));
   const data = await api('PUT', `/fans/${fan}/curve`, { fan_id: fan, points });
-  if (data) alert(T.curveSaved);
+  if (data) {
+    await loadCurve(fan);
+    alert(T.curveSaved);
+  }
 }
 
 document.getElementById('fanSelect').onchange = () => { loadCurve(activeFan()); };
