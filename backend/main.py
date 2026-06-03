@@ -33,6 +33,15 @@ async def lifespan(app: FastAPI):
     start_control_loop()
     yield
     stop_control_loop()
+    # Release all fans back to BIOS on shutdown
+    from .services.config_service import load_config
+    from .services.fan_service import release_pwm_control
+    try:
+        cfg = load_config()
+        for fc in cfg.fans:
+            release_pwm_control(fc.pwm_path)
+    except Exception:
+        pass
 
 
 app = FastAPI(
