@@ -55,6 +55,9 @@ async def _control_loop() -> None:
                            if r.temperature_c is not None 
                            and r.serial not in cfg.excluded_from_curve_disks]
             max_temp = max(curve_temps) if curve_temps else 0.0
+            logger.info(f"excluded: {cfg.excluded_from_curve_disks}")
+            logger.info(f"readings serials: {[(r.device, r.serial, r.temperature_c) for r in readings]}")
+            logger.info(f"curve_temps: {curve_temps}, max_temp: {max_temp}")
 
             # Read fan statuses
             fan_statuses = read_fan_statuses(cfg.fans, cfg.unmonitored_fans)

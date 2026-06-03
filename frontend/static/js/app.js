@@ -713,9 +713,10 @@ async function rescanHardware() {
   if (data) {
     serverDisks = data.disks;
     allDisks = data.disks;
-    serverFans  = data.fans;
-    allFans = data.fans;
+    serverFans = data.fans;
+    // Reload settings to get updated fan names and config
     settingsData = await api('GET', '/settings/');
+    allFans = settingsData.all_fans || data.fans;
     buildDiskCfg(settingsData);
     buildFanCfg(settingsData);
   }
