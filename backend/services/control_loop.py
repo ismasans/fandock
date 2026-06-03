@@ -37,6 +37,7 @@ async def _control_loop() -> None:
 
     while True:
         try:
+            logger.info("Control loop tick starting…")
             cfg = load_config()
 
             if not cfg.monitor_enabled:
