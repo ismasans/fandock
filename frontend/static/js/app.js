@@ -470,7 +470,15 @@ function buildChart() {
           pointBackgroundColor: '#378ADD',
           tension: 0,
           fill: true,
-          dragData: true,
+          dragData: {
+            round: 1,
+            showTooltip: true,
+            onDragStart: (e, datasetIndex, index) => {
+              const fan = activeFan();
+              const pts = curves[fan] || [];
+              if (index === pts.length - 1) return false;
+            },
+          },
         },
         {
           label: T.currentOp,
@@ -521,10 +529,25 @@ function renderPointRows(doRebuild) {
     const tIn = document.createElement('input'); tIn.className = 'point-input'; tIn.type = 'number'; tIn.min = 15; tIn.max = 85; tIn.value = toDisplay(pt.t);
     tIn.onchange = () => { curves[fan][i].t = Math.round(fromDisplay(parseFloat(tIn.value) || pt.t)); sortCurve(fan); refresh(); };
     const pIn = document.createElement('input'); pIn.className = 'point-input'; pIn.type = 'number'; pIn.min = 0; pIn.max = 100; pIn.value = pt.p;
-    pIn.onchange = () => { curves[fan][i].p = Math.max(0, Math.min(100, parseInt(pIn.value) || 0)); refresh(); };
+    const isLastPoint = i === (curves[fan] || []).length - 1;
+    if (isLastPoint) {
+      pIn.disabled = true;
+      pIn.style.opacity = '0.5';
+      pIn.title = 'Last point is always 100%';
+    } else {
+      pIn.onchange = () => { curves[fan][i].p = Math.max(0, Math.min(100, parseInt(pIn.value) || 0)); refresh(); };
+    }
     const del = document.createElement('button'); del.className = 'del-btn'; del.title = 'Remove point';
     del.innerHTML = '<i class="ti ti-trash"></i>';
-    del.onclick = () => { if ((curves[fan] || []).length > 2) { curves[fan].splice(i, 1); refresh(); } };
+    const isFirst = i === 0;
+    const isLast = i === (curves[fan] || []).length - 1;
+    if (isFirst || isLast) {
+      del.disabled = true;
+      del.style.opacity = '0.3';
+      del.style.cursor = 'not-allowed';
+    } else {
+      del.onclick = () => { if ((curves[fan] || []).length > 2) { curves[fan].splice(i, 1); refresh(); } };
+    }
     row.append(tIn, pIn, del); container.appendChild(row);
   });
   if (doRebuild) buildChart();
