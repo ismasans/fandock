@@ -182,7 +182,7 @@ function buildWizardLists() {
     row.innerHTML = `
       <code style="font-size:12px;color:var(--color-text-secondary);min-width:80px;">${f.fan_id}</code>
       <input class="cfg-input" id="wizFan-${i}" placeholder="e.g. Front intake" value="${f.friendly_name || ''}">
-      <button class="test-btn" onclick="testFan('${f.fan_id}')"><i class="ti ti-player-play" style="font-size:11px;margin-right:3px;"></i>Test</button>`;
+      <button class="test-btn" onclick="testFan('${f.fan_id}', this)"><i class="ti ti-player-play" style="font-size:11px;margin-right:3px;"></i>Test</button>`;
     fanList.appendChild(row);
   });
 }
@@ -674,16 +674,20 @@ function onFanMonitorChange(i) {
   }
 }
 
-async function testFan(id) {
-  const btn = document.getElementById('test-' + id);
+async function testFan(id, btnEl) {
+  const btn = btnEl || document.getElementById('test-' + id);
   const bar = document.getElementById('bar-' + id);
-  btn.classList.add('testing');
-  btn.innerHTML = `<i class="ti ti-player-stop" style="font-size:11px;margin-right:3px;"></i>${T.testing}`;
+  if (btn) {
+    btn.classList.add('testing');
+    btn.innerHTML = `<i class="ti ti-player-stop" style="font-size:11px;margin-right:3px;"></i>${T.testing}`;
+  }
   if (bar) { bar.style.width = '100%'; bar.style.background = '#BA7517'; }
   await api('POST', `/fans/${id}/test`);
   setTimeout(() => {
-    btn.classList.remove('testing');
-    btn.innerHTML = `<i class="ti ti-player-play" style="font-size:11px;margin-right:3px;"></i>${T.test}`;
+    if (btn) {
+      btn.classList.remove('testing');
+      btn.innerHTML = `<i class="ti ti-player-play" style="font-size:11px;margin-right:3px;"></i>${T.test}`;
+    }
     if (bar) bar.style.background = '#378ADD';
   }, 3200);
 }
