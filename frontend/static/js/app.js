@@ -383,14 +383,16 @@ function activeFan() { return document.getElementById('fanSelect').value; }
 function buildFanSelects() {
   const sel = document.getElementById('fanSelect');
   sel.innerHTML = '';
-  serverFans.forEach(f => {
+  const controlled = (settingsData && settingsData.fans) 
+    ? settingsData.fans.filter(f => f.controlled)
+    : serverFans;
+  controlled.forEach(f => {
     const opt = document.createElement('option');
     opt.value = f.fan_id;
     opt.textContent = f.friendly_name || f.fan_id;
     sel.appendChild(opt);
   });
-  // Load curves from server for each fan
-  serverFans.forEach(f => {
+  controlled.forEach(f => {
     if (!curves[f.fan_id]) loadCurve(f.fan_id);
   });
 }
