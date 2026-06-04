@@ -629,7 +629,6 @@ function buildDiskCfg(cfg) {
       <td><span class="disk-type-badge">${d.type}</span></td>
       <td><input class="cfg-input" id="dname-${i}" value="${name}"></td>
       <td><label class="toggle"><input type="checkbox" ${!cfg.unmonitored_disks || !cfg.unmonitored_disks.includes(d.device) ? 'checked' : ''} id="dmon-${i}"><span class="toggle-slider"></span></label></td>
-      <td><label class="toggle"><input type="checkbox" ${!cfg.excluded_from_curve_disks || !cfg.excluded_from_curve_disks.includes(d.serial) ? 'checked' : ''} id="dcurve-${i}"><span class="toggle-slider"></span></label></td>
       <td><span class="detected-badge">${T.smartOk}</span></td>`;
     tb.appendChild(tr);
   });
@@ -713,10 +712,9 @@ async function rescanHardware() {
   if (data) {
     serverDisks = data.disks;
     allDisks = data.disks;
-    serverFans = data.fans;
-    // Reload settings to get updated fan names and config
+    serverFans  = data.fans;
+    allFans = data.fans;
     settingsData = await api('GET', '/settings/');
-    allFans = settingsData.all_fans || data.fans;
     buildDiskCfg(settingsData);
     buildFanCfg(settingsData);
   }
@@ -738,12 +736,6 @@ async function saveSettings() {
   diskListForSave.forEach((d, i) => {
       const el = document.getElementById(`dmon-${i}`);
       if (el && !el.checked) unmonitored.push(d.device);
-  });
-
-  const excluded_from_curve = [];
-  diskListForSave.forEach((d, i) => {
-      const el = document.getElementById(`dcurve-${i}`);
-      if (el && !el.checked) excluded_from_curve.push(d.serial);
   });
 
   const unmonitored_fans = [];
@@ -773,7 +765,6 @@ async function saveSettings() {
     temp_unit: unit,
     unmonitored_disks: unmonitored,
     unmonitored_fans: unmonitored_fans,
-    excluded_from_curve_disks: excluded_from_curve,
   });
   await fetchSnapshot();
   showView('dashboard', document.getElementById('navDash'));

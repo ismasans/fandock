@@ -37,7 +37,6 @@ async def _control_loop() -> None:
 
     while True:
         try:
-            logger.info("Control loop tick starting…")
             cfg = load_config()
 
             if not cfg.monitor_enabled:
@@ -50,14 +49,9 @@ async def _control_loop() -> None:
             names_by_serial = cfg.disk_friendly_names
             readings = await read_temperatures(monitored, names_by_serial)
 
-            # Only include disks not excluded from curve calculation
-            curve_temps = [r.temperature_c for r in readings 
-                           if r.temperature_c is not None 
-                           and r.serial not in cfg.excluded_from_curve_disks]
-            max_temp = max(curve_temps) if curve_temps else 0.0
-            logger.info(f"excluded: {cfg.excluded_from_curve_disks}")
-            logger.info(f"readings serials: {[(r.device, r.serial, r.temperature_c) for r in readings]}")
-            logger.info(f"curve_temps: {curve_temps}, max_temp: {max_temp}")
+            # Determine max temperature across all disks (used for fan curve)
+            temps_c = [r.temperature_c for r in readings if r.temperature_c is not None]
+            max_temp = max(temps_c) if temps_c else 0.0
 
             # Read fan statuses
             fan_statuses = read_fan_statuses(cfg.fans, cfg.unmonitored_fans)
