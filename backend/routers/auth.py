@@ -86,6 +86,11 @@ async def first_run_status():
 
 @router.get("/version")
 async def get_version():
+    import os
     import pathlib
-    v = pathlib.Path("/app/VERSION").read_text().strip() if pathlib.Path("/app/VERSION").exists() else "dev"
+    # Primero intenta leer de la variable de entorno (establecida en docker-compose.yml)
+    v = os.getenv("FANDOCK_VERSION")
+    # Si no está, intenta leer del archivo
+    if not v:
+        v = pathlib.Path("/app/VERSION").read_text().strip() if pathlib.Path("/app/VERSION").exists() else "dev"
     return {"version": v}
