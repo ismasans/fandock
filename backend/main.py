@@ -44,9 +44,12 @@ async def lifespan(app: FastAPI):
         pass
 
 
+import pathlib
+_version = pathlib.Path("/app/VERSION").read_text().strip() if pathlib.Path("/app/VERSION").exists() else "dev"
+
 app = FastAPI(
     title="FanDock",
-    version="1.0.0",
+    version=_version,
     description="NAS fan control based on disk SMART temperatures",
     lifespan=lifespan,
 )

@@ -15,6 +15,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application
 COPY backend/ ./backend/
 COPY frontend/ ./frontend/
+COPY VERSION ./VERSION
 
 # Config volume
 VOLUME ["/app/config"]

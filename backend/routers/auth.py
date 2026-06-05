@@ -83,3 +83,9 @@ async def complete_setup(_user: str = Depends(get_current_user)):
 async def first_run_status():
     cfg = load_config()
     return {"first_run": cfg.first_run}
+
+@router.get("/version")
+async def get_version():
+    import pathlib
+    v = pathlib.Path("/app/VERSION").read_text().strip() if pathlib.Path("/app/VERSION").exists() else "dev"
+    return {"version": v}

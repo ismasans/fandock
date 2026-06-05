@@ -251,13 +251,24 @@ function openChangePwd() {
 function closePwdModal() { document.getElementById('pwdModal').classList.add('hidden'); }
 
 // ── App bootstrap ─────────────────────────────────────────────────────────────
-function showApp() {
+async function showApp() {
   document.getElementById('loginView').classList.add('hidden');
   document.getElementById('wizardView').classList.add('hidden');
   document.getElementById('mainView').classList.remove('hidden');
   const hint = document.getElementById('defaultCredsHint');
   if (hint) hint.style.display = 'none';
+  // Load settings data on startup so Curves and other views have it
+  settingsData = await api('GET', '/settings/');
+  if (settingsData) {
+    unit = settingsData.temp_unit || 'C';
+    if (settingsData.all_disks && settingsData.all_disks.length > 0) allDisks = settingsData.all_disks;
+    if (settingsData.all_fans && settingsData.all_fans.length > 0) allFans = settingsData.all_fans;
+  }
   showView('dashboard', document.getElementById('navDash'));
+  // Load version
+  api('GET', '/auth/version').then(d => {
+    if (d) document.getElementById('appVersion').textContent = `v${d.version}`;
+  });
   startPolling();
 }
 
