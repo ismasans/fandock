@@ -122,7 +122,6 @@
       <div class="curve-controls">
         <span style="font-size:13px;font-weight:500;color:var(--color-text-primary);">Fan curve editor</span>
         <select id="fanSelect"></select>
-        <select id="sensorSelect"><option value="max">Hottest disk (auto)</option></select>
         <span class="current-info">
           <i class="ti ti-thermometer" style="font-size:13px;"></i>
           Now: <strong id="curTempLabel" style="font-weight:500;">—</strong>
@@ -161,6 +160,11 @@
         </button>
       </div>
       <p class="hint">Drag points on the chart or edit values in the table. Points auto-sort by temperature.</p>
+      
+      <div style="margin-top:1.25rem;">
+        <p class="section-label">Linked disks — this curve reacts to the hottest selected disk</p>
+        <div id="curveLinkedDisks"></div>
+      </div>
     </div>
   </div>
 

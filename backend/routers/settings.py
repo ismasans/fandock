@@ -100,6 +100,7 @@ class FanConfigPayload(BaseModel):
     rpm_path: Optional[str] = None
     enabled: Optional[bool] = None
     controlled: Optional[bool] = None
+    linked_disks: Optional[list[str]] = None
 
 @router.patch("/fans/{fan_id}")
 async def update_fan_config(

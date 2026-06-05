@@ -280,7 +280,7 @@ function showView(name, btn) {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('view-' + name).classList.add('active');
   if (btn) btn.classList.add('active');
-  if (name === 'curves') { buildFanSelects(); buildChart(); renderPointRows(false); }
+  if (name === 'curves') { buildFanSelects(); buildChart(); renderPointRows(false); renderLinkedDisks(); }
   if (name === 'settings') loadSettings();
 }
 
@@ -395,13 +395,14 @@ function buildFanSelects() {
   controlled.forEach(f => {
     if (!curves[f.fan_id]) loadCurve(f.fan_id);
   });
+  renderLinkedDisks();
 }
 
 async function loadCurve(fanId) {
   const data = await api('GET', `/fans/${fanId}/curve`);
   if (!data) return;
   curves[fanId] = data.points.map(p => ({ t: p.temp_c, p: p.pwm_pct }));
-  if (fanId === activeFan()) { buildChart(); renderPointRows(false); }
+  if (fanId === activeFan()) { buildChart(); renderPointRows(false); renderLinkedDisks(); }
 }
 
 function getMaxTempC() {
@@ -429,7 +430,20 @@ function sortCurve(fanId) {
 
 function updateBadge() {
   const fan = activeFan();
-  const tempC = getMaxTempC();
+  // Get max temp from linked disks only
+  const fanCfg = settingsData && settingsData.fans 
+    ? settingsData.fans.find(f => f.fan_id === fan) 
+    : null;
+  const linked = fanCfg ? (fanCfg.linked_disks || []) : [];
+  let tempC;
+  if (linked.length > 0) {
+    const linkedTemps = serverDisks
+      .filter(d => linked.includes(d.serial) && d.temperature_c != null)
+      .map(d => d.temperature_c);
+    tempC = linkedTemps.length > 0 ? Math.max(...linkedTemps) : getMaxTempC();
+  } else {
+    tempC = getMaxTempC();
+  }
   const tempDisp = toDisplay(tempC);
   const pct = Math.round(interpolate(curves[fan] || [], tempC));
   document.getElementById('curTempLabel').textContent = `${tempDisp}${unitLabel()}`;
@@ -571,6 +585,59 @@ function checkWarnBar() {
   const fan = activeFan();
   const minP = Math.min(...(curves[fan] || []).map(p => p.p));
   document.getElementById('warnBar').style.display = minP < 20 ? 'block' : 'none';
+}
+
+function renderLinkedDisks() {
+  const fan = activeFan();
+  const container = document.getElementById('curveLinkedDisks');
+  if (!container) return;
+  container.innerHTML = '';
+
+  // Get current fan config
+  const fanCfg = settingsData && settingsData.fans 
+    ? settingsData.fans.find(f => f.fan_id === fan) 
+    : null;
+  const linked = fanCfg ? (fanCfg.linked_disks || []) : [];
+
+  // Use allDisks if available, otherwise serverDisks
+  const diskList = allDisks.length > 0 ? allDisks : serverDisks;
+  if (diskList.length === 0) {
+    container.innerHTML = '<p style="font-size:12px;color:var(--color-text-tertiary);">No disks detected. Run a scan in Settings first.</p>';
+    return;
+  }
+
+  diskList.forEach((d, i) => {
+    const name = (settingsData && settingsData.disk_friendly_names && 
+                  (settingsData.disk_friendly_names[d.serial] || settingsData.disk_friendly_names[d.device])) 
+                 || d.device;
+    const isLinked = linked.includes(d.serial);
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:6px;';
+    row.innerHTML = `
+      <label class="toggle"><input type="checkbox" ${isLinked ? 'checked' : ''} id="linked-${i}" 
+        onchange="onLinkedDiskChange()"><span class="toggle-slider"></span></label>
+      <span style="font-size:13px;color:var(--color-text-primary);">${name}</span>
+      <code style="font-size:11px;color:var(--color-text-tertiary);">${d.serial || d.device}</code>
+      <span class="disk-type-badge">${d.type}</span>`;
+    container.appendChild(row);
+  });
+}
+
+async function onLinkedDiskChange() {
+  const fan = activeFan();
+  const diskList = allDisks.length > 0 ? allDisks : serverDisks;
+  const linked = [];
+  diskList.forEach((d, i) => {
+    const el = document.getElementById(`linked-${i}`);
+    if (el && el.checked) linked.push(d.serial);
+  });
+  await api('PATCH', `/settings/fans/${fan}`, { linked_disks: linked });
+  // Update local settingsData
+  if (settingsData && settingsData.fans) {
+    const fc = settingsData.fans.find(f => f.fan_id === fan);
+    if (fc) fc.linked_disks = linked;
+  }
+  updateBadge();
 }
 
 function addPoint() {

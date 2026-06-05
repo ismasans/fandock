@@ -49,9 +49,8 @@ async def _control_loop() -> None:
             names_by_serial = cfg.disk_friendly_names
             readings = await read_temperatures(monitored, names_by_serial)
 
-            # Determine max temperature across all disks (used for fan curve)
-            temps_c = [r.temperature_c for r in readings if r.temperature_c is not None]
-            max_temp = max(temps_c) if temps_c else 0.0
+            # Build a serial→temp map for fast lookup
+            temp_by_serial = {r.serial: r.temperature_c for r in readings if r.serial and r.temperature_c is not None}
 
             # Read fan statuses
             fan_statuses = read_fan_statuses(cfg.fans, cfg.unmonitored_fans)
@@ -67,7 +66,13 @@ async def _control_loop() -> None:
                         continue
                     if not fc.curve:
                         continue
-                    pwm_value = interpolate_pwm(max_temp, fc.curve)
+                    # Use linked disks if configured, otherwise all monitored disks
+                    if fc.linked_disks:
+                        fan_temps = [temp_by_serial[s] for s in fc.linked_disks if s in temp_by_serial]
+                    else:
+                        fan_temps = list(temp_by_serial.values())
+                    fan_max_temp = max(fan_temps) if fan_temps else 0.0
+                    pwm_value = interpolate_pwm(fan_max_temp, fc.curve)
                     enable_pwm_control(fc.pwm_path)
                     ok = set_pwm(fc.pwm_path, pwm_value)
                     if not ok:

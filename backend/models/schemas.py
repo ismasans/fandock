@@ -90,6 +90,7 @@ class FanConfig(BaseModel):
     enabled: bool = True
     controlled: bool = True
     curve: list[CurvePoint] = Field(default_factory=list)
+    linked_disks: list[str] = Field(default_factory=list)  # disk serials
 
 class AppConfig(BaseModel):
     password_hash: str
