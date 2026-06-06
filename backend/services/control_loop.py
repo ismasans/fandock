@@ -104,3 +104,21 @@ def start_control_loop() -> None:
 def stop_control_loop() -> None:
     if _loop_task:
         _loop_task.cancel()
+
+async def force_tick() -> None:
+    """Force an immediate control loop tick."""
+    global _last_snapshot
+    try:
+        cfg = load_config()
+        monitored = [d for d in _known_disks if d.device not in cfg.unmonitored_disks]
+        names_by_serial = cfg.disk_friendly_names
+        readings = await read_temperatures(monitored, names_by_serial)
+        fan_statuses = read_fan_statuses(cfg.fans, cfg.unmonitored_fans)
+        any_critical = any(r.status == "critical" for r in readings)
+        _last_snapshot = {
+            "disks": [r.model_dump() for r in readings],
+            "fans": [s.model_dump() for s in fan_statuses],
+            "any_critical": any_critical,
+        }
+    except Exception as exc:
+        logger.exception(f"Force tick error: {exc}")

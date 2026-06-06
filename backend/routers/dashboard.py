@@ -9,10 +9,18 @@ from fastapi import APIRouter, Depends
 from ..routers.auth import get_current_user
 from ..services.control_loop import get_last_snapshot
 
+from ..services.control_loop import get_last_snapshot, force_tick
+
 router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
 
 
 @router.get("/snapshot")
 async def snapshot(_user: str = Depends(get_current_user)):
     """Return the most recent disk temperatures + fan statuses."""
+    return await get_last_snapshot()
+
+
+@router.post("/refresh")
+async def refresh(_user: str = Depends(get_current_user)):
+    await force_tick()
     return await get_last_snapshot()

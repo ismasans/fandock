@@ -318,6 +318,16 @@ async function fetchSnapshot() {
   if (alertEnabled && data.any_critical) showCriticalBanner();
 }
 
+async function forceRefresh() {
+  const data = await api('POST', '/dashboard/refresh');
+  if (!data) return;
+  serverDisks = data.disks || [];
+  serverFans  = data.fans  || [];
+  renderDiskGrid();
+  renderFanPanel();
+  if (alertEnabled && data.any_critical) showCriticalBanner();
+}
+
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 function threshClass(disk) {
   const s = disk.status;
@@ -849,7 +859,7 @@ async function saveSettings() {
     if (settingsData.all_disks && settingsData.all_disks.length > 0) allDisks = settingsData.all_disks;
     if (settingsData.all_fans && settingsData.all_fans.length > 0) allFans = settingsData.all_fans;
   }
-  await fetchSnapshot();
+  await forceRefresh()
   showView('dashboard', document.getElementById('navDash'));
 }
 
