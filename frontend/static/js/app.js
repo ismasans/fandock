@@ -844,11 +844,20 @@ async function saveSettings() {
     unmonitored_disks: unmonitored,
     unmonitored_fans: unmonitored_fans,
   });
+  settingsData = await api('GET', '/settings/');
+  if (settingsData) {
+    if (settingsData.all_disks && settingsData.all_disks.length > 0) allDisks = settingsData.all_disks;
+    if (settingsData.all_fans && settingsData.all_fans.length > 0) allFans = settingsData.all_fans;
+  }
   await fetchSnapshot();
   showView('dashboard', document.getElementById('navDash'));
 }
 
-function discardSettings() {
-  loadSettings();
+async function discardSettings() {
+  settingsData = await api('GET', '/settings/');
+  if (settingsData) {
+    if (settingsData.all_disks && settingsData.all_disks.length > 0) allDisks = settingsData.all_disks;
+    if (settingsData.all_fans && settingsData.all_fans.length > 0) allFans = settingsData.all_fans;
+  }
   showView('dashboard', document.getElementById('navDash'));
 }
