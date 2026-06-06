@@ -47,6 +47,7 @@ Then open **http://\<NAS_IP\>:8080** in your browser.
 |----------|---------|-------------|
 | `FANDOCK_PORT` | `8080` | Web UI port |
 | `FANDOCK_SECRET` | `change_me` | JWT secret key — change this! |
+| `FANDOCK_CONFIG_PATH` | `/app/config/config.json` | Path to the configuration file |
 
 ## Password Reset
 

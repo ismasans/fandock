@@ -11,6 +11,7 @@ services:
     environment:
       - FANDOCK_SECRET=change_me
       - FANDOCK_PORT=8080
+      - FANDOCK_CONFIG_PATH=/app/config/config.json
     restart: unless-stopped
 
 volumes:
