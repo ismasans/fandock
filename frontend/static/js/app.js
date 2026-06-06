@@ -480,8 +480,10 @@ function buildChart() {
   const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   const gridColor  = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
   const textColor  = isDark ? '#aaa' : '#777';
-  const minT = unit === 'F' ? 59 : 15;
-  const maxT = unit === 'F' ? 185 : 85;
+  const temps = pts.map(p => toDisplay(p.t));
+  const padding = unit === 'F' ? 9 : 5;
+  const minT = temps.length > 0 ? Math.max(unit === 'F' ? 32 : 0, Math.min(...temps) - padding) : (unit === 'F' ? 59 : 15);
+  const maxT = temps.length > 0 ? Math.min(unit === 'F' ? 212 : 100, Math.max(...temps) + padding) : (unit === 'F' ? 185 : 85);
 
   const chartData = pts.map(p => ({ x: toDisplay(p.t), y: p.p }));
   const tempC = getMaxTempC();
