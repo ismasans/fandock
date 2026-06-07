@@ -296,9 +296,8 @@ function showView(name, btn) {
   if (name === 'curves') { buildFanSelects(); buildChart(); renderPointRows(false); renderLinkedDisks(); }
   if (name === 'settings') {
     loadSettings();
-    // Auto-refresh RPM every 10 seconds while in Settings
-    // ← Change interval here to adjust refresh rate (milliseconds)
-    _settingsRefreshTimer = setInterval(() => refreshFanRpm(), 10000);
+    // Auto-refresh RPM every time defined in POLL_INTERVAL_MS while in Settings
+    _settingsRefreshTimer = setInterval(() => refreshFanRpm(), POLL_INTERVAL_MS); // ← Change interval here to adjust refresh rate (milliseconds)
   } else {
     // Stop refreshing when leaving Settings
     if (_settingsRefreshTimer) { clearInterval(_settingsRefreshTimer); _settingsRefreshTimer = null; }
