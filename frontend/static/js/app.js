@@ -785,16 +785,20 @@ async function testFan(id, btnEl) {
   }
   if (bar) { bar.style.width = '100%'; bar.style.background = '#BA7517'; }
   await api('POST', `/fans/${id}/test`);
-  setTimeout(() => {
-    window._testRunning = false;
-    // Re-enable all test buttons
-    document.querySelectorAll('.test-btn').forEach(b => b.disabled = false);
-    if (btn) {
-      btn.classList.remove('testing');
-      btn.innerHTML = `<i class="ti ti-player-play" style="font-size:11px;margin-right:3px;"></i>${T.test}`;
+  // Poll until test is complete
+  const pollTest = setInterval(async () => {
+    const status = await api('GET', '/dashboard/test-status');
+    if (status && !status.test_in_progress) {
+      clearInterval(pollTest);
+      window._testRunning = false;
+      document.querySelectorAll('.test-btn').forEach(b => b.disabled = false);
+      if (btn) {
+        btn.classList.remove('testing');
+        btn.innerHTML = `<i class="ti ti-player-play" style="font-size:11px;margin-right:3px;"></i>${T.test}`;
+      }
+      if (bar) bar.style.background = '#378ADD';
     }
-    if (bar) bar.style.background = '#378ADD';
-  }, 25000); // ← Total test duration in ms: STOP_DURATION + SPIN_DURATION + margin (15000 + 8000 + 2000)
+  }, 1000);
 }
 
 function setUnit(u) {
