@@ -125,8 +125,8 @@ async def test_fan(pwm_path: str, stop_first: bool = True) -> bool:
     Test fan: stop completely → wait → spin at 100% → restore.
     Adjust the durations below to change test behavior.
     """
-    STOP_DURATION_SECONDS = 15  # ← Time to keep fan stopped (seconds)
-    SPIN_DURATION_SECONDS = 8   # ← Time to spin at 100% (seconds)
+    STOP_DURATION_SECONDS = 10  # ← Time to keep fan stopped (seconds)
+    SPIN_DURATION_SECONDS = 10   # ← Time to spin at 100% (seconds)
 
     control_loop._test_in_progress = True
     try:
