@@ -56,6 +56,6 @@ async def test_fan_endpoint(fan_id: str, _user: str = Depends(get_current_user))
     cfg = load_config()
     for fc in cfg.fans:
         if fc.fan_id == fan_id:
-           await test_fan(fc.pwm_path, stop_first=True)
+            await test_fan(fc.pwm_path, stop_first=True)
             return {"ok": True}
     raise HTTPException(404, f"Fan {fan_id} not found")
