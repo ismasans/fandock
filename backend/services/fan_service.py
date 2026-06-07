@@ -119,13 +119,23 @@ def set_pwm(pwm_path: str, value: int) -> bool:
     return _write_sysfs(pwm_path, value)
 
 
-async def test_fan(pwm_path: str, test_pwm: int = 255, duration_seconds: int = 3) -> bool:
-    """Spin fan to test_pwm for duration_seconds, then restore original value."""
+async def test_fan(pwm_path: str, stop_first: bool = True) -> bool:
+    """
+    Test fan: stop completely → wait → spin at 100% → restore.
+    Adjust the durations below to change test behavior.
+    """
+    STOP_DURATION_SECONDS = 5   # ← Time to keep fan stopped (seconds)
+    SPIN_DURATION_SECONDS = 6   # ← Time to spin at 100% (seconds)
+
     original = _read_sysfs_int(pwm_path) or 128
     enable_pwm_control(pwm_path)
-    set_pwm(pwm_path, test_pwm)
-    await asyncio.sleep(duration_seconds)
+    if stop_first:
+        set_pwm(pwm_path, 0)
+        await asyncio.sleep(STOP_DURATION_SECONDS)
+    set_pwm(pwm_path, 255)
+    await asyncio.sleep(SPIN_DURATION_SECONDS)
     set_pwm(pwm_path, original)
+    release_pwm_control(pwm_path)
     return True
 
 
