@@ -783,7 +783,7 @@ async function testFan(id, btnEl) {
       btn.innerHTML = `<i class="ti ti-player-play" style="font-size:11px;margin-right:3px;"></i>${T.test}`;
     }
     if (bar) bar.style.background = '#378ADD';
-  }, 12000); // ← Total test duration in ms: STOP_DURATION + SPIN_DURATION + margin (5000 + 6000 + 1000)
+  }, 17000); // ← Total test duration in ms: STOP_DURATION + SPIN_DURATION + margin (10000 + 6000 + 1000)
 }
 
 function setUnit(u) {
