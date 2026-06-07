@@ -52,10 +52,10 @@ async def update_curve(fan_id: str, curve: FanCurve, _user: str = Depends(get_cu
 
 @router.post("/{fan_id}/test")
 async def test_fan_endpoint(fan_id: str, _user: str = Depends(get_current_user)):
-    """Spin the fan at 100% for 6 seconds."""
+    """Test the fan."""
     cfg = load_config()
     for fc in cfg.fans:
         if fc.fan_id == fan_id:
-            await test_fan(fc.pwm_path, test_pwm=255, duration_seconds=6)
+           await test_fan(fc.pwm_path, stop_first=True)
             return {"ok": True}
     raise HTTPException(404, f"Fan {fan_id} not found")
