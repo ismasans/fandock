@@ -11,6 +11,7 @@ import os
 import subprocess
 from pathlib import Path
 from typing import Optional
+from . import control_loop
 
 from ..models.schemas import FanStatus, FanConfig, CurvePoint
 
@@ -124,18 +125,22 @@ async def test_fan(pwm_path: str, stop_first: bool = True) -> bool:
     Test fan: stop completely → wait → spin at 100% → restore.
     Adjust the durations below to change test behavior.
     """
-    STOP_DURATION_SECONDS = 15   # ← Time to keep fan stopped (seconds)
+    STOP_DURATION_SECONDS = 15  # ← Time to keep fan stopped (seconds)
     SPIN_DURATION_SECONDS = 8   # ← Time to spin at 100% (seconds)
 
-    original = _read_sysfs_int(pwm_path) or 128
-    enable_pwm_control(pwm_path)
-    if stop_first:
-        set_pwm(pwm_path, 0)
-        await asyncio.sleep(STOP_DURATION_SECONDS)
-    set_pwm(pwm_path, 255)
-    await asyncio.sleep(SPIN_DURATION_SECONDS)
-    set_pwm(pwm_path, original)
-    release_pwm_control(pwm_path)
+    control_loop._test_in_progress = True
+    try:
+        original = _read_sysfs_int(pwm_path) or 128
+        enable_pwm_control(pwm_path)
+        if stop_first:
+            set_pwm(pwm_path, 0)
+            await asyncio.sleep(STOP_DURATION_SECONDS)
+        set_pwm(pwm_path, 255)
+        await asyncio.sleep(SPIN_DURATION_SECONDS)
+        set_pwm(pwm_path, original)
+        release_pwm_control(pwm_path)
+    finally:
+        control_loop._test_in_progress = False
     return True
 
 

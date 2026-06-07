@@ -19,6 +19,7 @@ logger = logging.getLogger("fandock.controller")
 _last_snapshot: dict = {"disks": [], "fans": [], "any_critical": False}
 _known_disks: list[DiskInfo] = []
 _known_fans: list = []
+_test_in_progress: bool = False
 
 async def get_last_snapshot() -> dict:
     return _last_snapshot
@@ -37,6 +38,9 @@ async def _control_loop() -> None:
 
     while True:
         try:
+            if _test_in_progress:
+                await asyncio.sleep(1)
+                continue
             cfg = load_config()
 
             if not cfg.monitor_enabled:
