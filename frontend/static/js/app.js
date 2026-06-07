@@ -765,10 +765,18 @@ function onFanMonitorChange(i) {
 }
 
 async function testFan(id, btnEl) {
+  if (window._testRunning) {
+    alert('A fan test is already in progress. Please wait.');
+    return;
+  }
   const confirmed = confirm(
-    '⚠️ Fan Test\n\nThe fan will stop completely for 8 seconds, then spin at 100% for 3 seconds.\n\nDo NOT use this on CPU fans — it may cause overheating.\n\nContinue?'
+    '⚠️ Fan Test\n\nThe fan will stop completely, then spin at 100%.\n\nDo NOT use this on CPU fans — it may cause overheating.\n\nContinue?'
   );
   if (!confirmed) return;
+  window._testRunning = true;
+  // Disable all test buttons
+  document.querySelectorAll('.test-btn').forEach(b => b.disabled = true);
+  
   const btn = btnEl || document.getElementById('test-' + id);
   const bar = document.getElementById('bar-' + id);
   if (btn) {
@@ -778,12 +786,15 @@ async function testFan(id, btnEl) {
   if (bar) { bar.style.width = '100%'; bar.style.background = '#BA7517'; }
   await api('POST', `/fans/${id}/test`);
   setTimeout(() => {
+    window._testRunning = false;
+    // Re-enable all test buttons
+    document.querySelectorAll('.test-btn').forEach(b => b.disabled = false);
     if (btn) {
       btn.classList.remove('testing');
       btn.innerHTML = `<i class="ti ti-player-play" style="font-size:11px;margin-right:3px;"></i>${T.test}`;
     }
     if (bar) bar.style.background = '#378ADD';
-  }, 24000); // ← Total test duration in ms: STOP_DURATION + SPIN_DURATION + margin (15000 + 8000 + 1000)
+  }, 25000); // ← Total test duration in ms: STOP_DURATION + SPIN_DURATION + margin (15000 + 8000 + 2000)
 }
 
 function setUnit(u) {

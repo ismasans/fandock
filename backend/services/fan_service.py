@@ -135,6 +135,7 @@ async def test_fan(pwm_path: str, stop_first: bool = True) -> bool:
         if stop_first:
             set_pwm(pwm_path, 0)
             await asyncio.sleep(STOP_DURATION_SECONDS)
+        enable_pwm_control(pwm_path)
         set_pwm(pwm_path, 255)
         await asyncio.sleep(SPIN_DURATION_SECONDS)
         set_pwm(pwm_path, original)
