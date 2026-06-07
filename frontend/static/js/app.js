@@ -286,13 +286,37 @@ if (token) {
 }
 
 // ── Navigation ────────────────────────────────────────────────────────────────
+let _settingsRefreshTimer = null;
+
 function showView(name, btn) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('view-' + name).classList.add('active');
   if (btn) btn.classList.add('active');
   if (name === 'curves') { buildFanSelects(); buildChart(); renderPointRows(false); renderLinkedDisks(); }
-  if (name === 'settings') loadSettings();
+  if (name === 'settings') {
+    loadSettings();
+    // Auto-refresh RPM every 10 seconds while in Settings
+    // ← Change interval here to adjust refresh rate (milliseconds)
+    _settingsRefreshTimer = setInterval(() => refreshFanRpm(), 10000);
+  } else {
+    // Stop refreshing when leaving Settings
+    if (_settingsRefreshTimer) { clearInterval(_settingsRefreshTimer); _settingsRefreshTimer = null; }
+  }
+}
+
+async function refreshFanRpm() {
+  const snap = await api('GET', '/dashboard/snapshot');
+  if (!snap || !snap.fans) return;
+  snap.fans.forEach(f => {
+    // Find fan index in current list
+    const fanList = allFans.length > 0 ? allFans : serverFans;
+    const i = fanList.findIndex(ff => ff.fan_id === f.fan_id);
+    if (i === -1) return;
+    const rpm = f.current_rpm != null ? `${f.current_rpm} rpm` : '— rpm';
+    const el = document.querySelector(`#fanCfgBody tr:nth-child(${i + 1}) td:nth-child(3) span`);
+    if (el) el.textContent = rpm;
+  });
 }
 
 function toggleUserMenu(force) {
@@ -305,7 +329,8 @@ document.addEventListener('click', e => {
 });
 
 // ── Polling ───────────────────────────────────────────────────────────────────
-function startPolling() { fetchSnapshot(); pollTimer = setInterval(fetchSnapshot, 10000); }
+const POLL_INTERVAL_MS = 5000; // ← Global polling interval in milliseconds
+function startPolling() { fetchSnapshot(); pollTimer = setInterval(fetchSnapshot, POLL_INTERVAL_MS); }
 function stopPolling()  { clearInterval(pollTimer); }
 
 async function fetchSnapshot() {
