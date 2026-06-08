@@ -569,6 +569,13 @@ function buildChart() {
                 const pts = curves[fan] || [];
                 if (i === pts.length - 1) return false;
                 curves[fan][i] = { t: Math.round(fromDisplay(val.x)), p: Math.round(val.y) };
+                // Enforce monotonically increasing PWM values
+                for (let j = i + 1; j < pts.length - 1; j++) {
+                  if (pts[j].p < pts[j-1].p) pts[j].p = pts[j-1].p;
+                }
+                for (let j = i - 1; j >= 0; j--) {
+                  if (pts[j].p > pts[j+1].p) pts[j].p = pts[j+1].p;
+                }
             }
             updateBadge();
           },
@@ -608,7 +615,21 @@ function renderPointRows(doRebuild) {
       pIn.style.opacity = '0.5';
       pIn.title = 'Last point is always 100%';
     } else {
-      pIn.onchange = () => { curves[fan][i].p = Math.max(0, Math.min(100, parseInt(pIn.value) || 0)); refresh(); };
+      pIn.onchange = () => {
+        const newVal = Math.max(0, Math.min(100, parseInt(pIn.value) || 0));
+        curves[fan][i].p = newVal;
+        // Enforce monotonically increasing PWM values
+        const pts = curves[fan];
+        // Raise subsequent points that are now lower
+        for (let j = i + 1; j < pts.length - 1; j++) {
+          if (pts[j].p < pts[j-1].p) pts[j].p = pts[j-1].p;
+        }
+        // Lower previous points that are now higher
+        for (let j = i - 1; j >= 0; j--) {
+          if (pts[j].p > pts[j+1].p) pts[j].p = pts[j+1].p;
+        }
+        refresh();
+      };
     }
     const del = document.createElement('button'); del.className = 'del-btn'; del.title = 'Remove point';
     del.innerHTML = '<i class="ti ti-trash"></i>';
