@@ -885,6 +885,10 @@ function showFanDiagnostic(diag, panel) {
       <strong>Make it persistent on Linux:</strong><br>
       <code style="display:block;margin:.5rem 0;padding:.4rem .6rem;background:rgba(0,0,0,.1);border-radius:4px;">${diag.instructions.persist_linux}</code>
       After loading the module, click <strong>Re-scan hardware</strong> again.`;
+      if (diag.module_alternative) {
+        panel.innerHTML += `<br><strong>If fans don't appear after Re-scan, try:</strong><br>
+          <code style="display:block;margin:.5rem 0;padding:.4rem .6rem;background:rgba(0,0,0,.1);border-radius:4px;">modprobe ${diag.module_alternative}</code>`;
+      }
     return;
   }
   // No chip detected

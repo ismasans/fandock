@@ -250,9 +250,18 @@ def diagnose_fan_hardware() -> dict:
 
             # Most desktop boards from these vendors use nct6775 family
             nct6775_vendors = ["asrock", "asus", "msi", "gigabyte", "biostar", "asustek"]
+            it87_vendors = ["supermicro", "tyan", "intel"]
+
             if any(v in vendor for v in nct6775_vendors):
                 result["chip_detected"] = "nct67xx (detected via board vendor)"
                 result["module_suggested"] = "nct6775"
+            elif any(v in vendor for v in it87_vendors):
+                result["chip_detected"] = "it87xx (detected via board vendor)"
+                result["module_suggested"] = "it87"
+            else:
+                result["chip_detected"] = "unknown"
+                result["module_suggested"] = "nct6775"
+                result["module_alternative"] = "it87"
         except OSError:
             pass
 
