@@ -169,3 +169,112 @@ td .toggle { display: inline-block; vertical-align: middle; margin-top: 2px; }
 .view { display: none; } .view.active { display: block; }
 .hidden { display: none !important; }
 .hint { font-size: 11px; color: var(--color-text-tertiary); margin-top: .5rem; }
+
+
+
+/* ── Responsive tables for mobile ─────────────────────────────────────────── */
+@media (max-width: 640px) {
+
+  /* Hide table headers on mobile */
+  .cfg-table thead { display: none; }
+
+  /* Each row becomes a card */
+  .cfg-table tr {
+    display: block;
+    background: var(--color-background-secondary);
+    border-radius: var(--border-radius-md);
+    padding: .75rem;
+    margin-bottom: .75rem;
+    border: 0.5px solid var(--color-border-tertiary);
+  }
+
+  .cfg-table td {
+    display: block;
+    padding: 3px 0;
+    border: none;
+  }
+
+  /* Disk table mobile layout */
+  #diskCfgBody tr { position: relative; }
+
+  /* Device + type badge on first line */
+  #diskCfgBody td:nth-child(1) { display: inline-block; margin-right: 8px; }
+  #diskCfgBody td:nth-child(3) { display: inline-block; }
+
+  /* Model on second line */
+  #diskCfgBody td:nth-child(2) { display: block; font-size: 12px; }
+
+  /* Serial on third line */
+  #diskCfgBody td:nth-child(4) {
+    display: block;
+    font-size: 11px;
+    color: var(--color-text-tertiary);
+    word-break: break-all;
+  }
+
+  /* Friendly name full width */
+  #diskCfgBody td:nth-child(5) .cfg-input { width: 100%; }
+  #diskCfgBody td:nth-child(5) { display: block; margin-top: 4px; }
+
+  /* Monitor toggle inline */
+  #diskCfgBody td:nth-child(6) {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+  }
+  #diskCfgBody td:nth-child(6)::before {
+    content: 'Monitor';
+    font-size: 12px;
+    color: var(--color-text-secondary);
+  }
+
+  /* Fan table mobile layout */
+  /* PWM channel + toggles on first line */
+  #fanCfgBody td:nth-child(1) { display: inline-block; margin-right: 8px; }
+
+  /* Friendly name full width */
+  #fanCfgBody td:nth-child(2) .cfg-input { width: 100%; }
+  #fanCfgBody td:nth-child(2) { display: block; margin-top: 4px; }
+
+  /* RPM */
+  #fanCfgBody td:nth-child(3) {
+    display: inline-block;
+    font-size: 12px;
+    margin-right: 8px;
+    margin-top: 6px;
+  }
+
+  /* Monitor toggle */
+  #fanCfgBody td:nth-child(4) {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-right: 10px;
+  }
+  #fanCfgBody td:nth-child(4)::before {
+    content: 'Monitor';
+    font-size: 12px;
+    color: var(--color-text-secondary);
+  }
+
+  /* Control toggle */
+  #fanCfgBody td:nth-child(5) {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-right: 10px;
+  }
+  #fanCfgBody td:nth-child(5)::before {
+    content: 'Control';
+    font-size: 12px;
+    color: var(--color-text-secondary);
+  }
+
+  /* Test button */
+  #fanCfgBody td:nth-child(6) { display: inline-block; margin-top: 6px; }
+
+  /* Fan bars in dashboard */
+  .fan-row { flex-wrap: wrap; }
+  .fan-label { min-width: 100%; margin-bottom: 4px; }
+}
