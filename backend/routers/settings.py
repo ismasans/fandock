@@ -14,6 +14,7 @@ from ..services.smart_service import scan_disks
 from ..services.fan_service import scan_fans
 from ..models.schemas import HardwareScanResult, FanConfig, CurvePoint
 from ..services import control_loop
+from ..services.smart_service import diagnose_fan_hardware
 
 router = APIRouter(prefix="/api/settings", tags=["settings"])
 
@@ -141,3 +142,7 @@ async def update_global_settings(
         cfg.unmonitored_disks = payload.unmonitored_disks
     save_config(cfg)
     return {"ok": True}
+
+@router.get("/fan-diagnostic")
+async def fan_diagnostic(_user: str = Depends(get_current_user)):
+    return diagnose_fan_hardware()

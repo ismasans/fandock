@@ -845,13 +845,62 @@ async function rescanHardware() {
   if (data) {
     serverDisks = data.disks;
     allDisks = data.disks;
-    serverFans  = data.fans;
-    allFans = data.fans;
+    serverFans = data.fans;
     settingsData = await api('GET', '/settings/');
+    allFans = settingsData.all_fans || data.fans;
     buildDiskCfg(settingsData);
     buildFanCfg(settingsData);
+
+    // Show diagnostic if no fans detected
+    const diagPanel = document.getElementById('fanDiagnostic');
+    if (data.fans.length === 0 && diagPanel) {
+      const diag = await api('GET', '/settings/fan-diagnostic');
+      if (diag) showFanDiagnostic(diag, diagPanel);
+    } else if (diagPanel) {
+      diagPanel.classList.add('hidden');
+    }
   }
 }
+
+function showFanDiagnostic(diag, panel) {
+  panel.classList.remove('hidden');
+  if (diag.module_loaded && diag.pwm_available) {
+    panel.style.background = 'var(--color-background-success)';
+    panel.style.border = '0.5px solid var(--color-border-success)';
+    panel.style.color = 'var(--color-text-success)';
+    panel.innerHTML = `<i class="ti ti-check" style="margin-right:6px;"></i>Fan controller detected: <strong>${diag.chip_detected}</strong> — PWM control available.`;
+    return;
+  }
+  if (diag.chip_detected && !diag.module_loaded) {
+    panel.style.background = 'var(--color-background-warning)';
+    panel.style.border = '0.5px solid var(--color-border-warning)';
+    panel.style.color = 'var(--color-text-warning)';
+    panel.innerHTML = `
+      <i class="ti ti-alert-triangle" style="margin-right:6px;"></i>
+      <strong>Fan chip detected but driver not loaded:</strong> ${diag.chip_detected}<br><br>
+      <strong>Load now</strong> (via SSH on your NAS):<br>
+      <code style="display:block;margin:.5rem 0;padding:.4rem .6rem;background:rgba(0,0,0,.1);border-radius:4px;">${diag.instructions.load_now}</code>
+      <strong>Make it persistent on TrueNAS:</strong><br>
+      <span style="font-size:12px;">${diag.instructions.persist_truenas}</span><br><br>
+      <strong>Make it persistent on Linux:</strong><br>
+      <code style="display:block;margin:.5rem 0;padding:.4rem .6rem;background:rgba(0,0,0,.1);border-radius:4px;">${diag.instructions.persist_linux}</code>
+      After loading the module, click <strong>Re-scan hardware</strong> again.`;
+    return;
+  }
+  // No chip detected
+  panel.style.background = 'var(--color-background-danger)';
+  panel.style.border = '0.5px solid var(--color-border-danger)';
+  panel.style.color = 'var(--color-text-danger)';
+  panel.innerHTML = `
+    <i class="ti ti-x" style="margin-right:6px;"></i>
+    <strong>No fan controller chip detected.</strong><br>
+    <span style="font-size:12px;margin-top:.5rem;display:block;">
+      Your motherboard may use an unsupported chip. 
+      Check if <code>sensors</code> detects any fan controllers on your system.
+      You can open an issue at <a href="https://github.com/ismasans/fandock/issues" target="_blank">github.com/ismasans/fandock</a> with your hardware details.
+    </span>`;
+}
+
 
 async function saveSettings() {
   // Save friendly names

@@ -184,3 +184,78 @@ async def read_temperatures(
             friendly_name=friendly_names.get(disk.serial) or friendly_names.get(disk.device),
         ))
     return readings
+
+
+# Chip → module mapping for fan control
+CHIP_MODULE_MAP = {
+    'nct6775': 'nct6775', 'nct6776': 'nct6775', 'nct6779': 'nct6775',
+    'nct6791': 'nct6775', 'nct6792': 'nct6775', 'nct6793': 'nct6775',
+    'nct6795': 'nct6775', 'nct6796': 'nct6775', 'nct6797': 'nct6775',
+    'nct6798': 'nct6775', 'nct6799': 'nct6775',
+    'it8620': 'it87', 'it8628': 'it87', 'it8686': 'it87', 'it8790': 'it87',
+    'w83627dhg': 'w83627ehf', 'w83627ehf': 'w83627ehf',
+    'f71882fg': 'f71882fg', 'f71869': 'f71882fg',
+}
+
+def diagnose_fan_hardware() -> dict:
+    """
+    Detect Super I/O chip and suggest the kernel module to load.
+    Returns diagnostic info even if no PWM is currently available.
+    """
+    result = {
+        "pwm_available": False,
+        "chip_detected": None,
+        "module_suggested": None,
+        "module_loaded": False,
+        "hwmon_names": [],
+        "instructions": None,
+    }
+
+    # Check if any PWM paths exist (module already loaded and working)
+    pwm_paths = glob.glob("/sys/class/hwmon/hwmon*/pwm[0-9]")
+    if pwm_paths:
+        result["pwm_available"] = True
+
+    # Read all hwmon chip names
+    hwmon_names = []
+    for name_path in glob.glob("/sys/class/hwmon/hwmon*/name"):
+        try:
+            hwmon_names.append(Path(name_path).read_text().strip())
+        except OSError:
+            pass
+    result["hwmon_names"] = hwmon_names
+
+    # Check if a known fan-control chip is already loaded
+    for name in hwmon_names:
+        if name in CHIP_MODULE_MAP:
+            result["chip_detected"] = name
+            result["module_suggested"] = CHIP_MODULE_MAP[name]
+            result["module_loaded"] = True
+            break
+
+    # If not loaded, try to detect from platform devices
+    if not result["chip_detected"]:
+        try:
+            platform_devices = os.listdir("/sys/bus/platform/devices/")
+            for dev in platform_devices:
+                dev_lower = dev.lower()
+                for chip in CHIP_MODULE_MAP:
+                    if chip in dev_lower:
+                        result["chip_detected"] = chip
+                        result["module_suggested"] = CHIP_MODULE_MAP[chip]
+                        break
+                if result["chip_detected"]:
+                    break
+        except OSError:
+            pass
+
+    # Generate instructions
+    if result["module_suggested"] and not result["module_loaded"]:
+        mod = result["module_suggested"]
+        result["instructions"] = {
+            "load_now": f"modprobe {mod}",
+            "persist_truenas": f"Add a Pre Init script in TrueNAS → System → Advanced → Init/Shutdown Scripts with command: modprobe {mod}",
+            "persist_linux": f"echo '{mod}' | sudo tee /etc/modules-load.d/fandock.conf",
+        }
+
+    return result
