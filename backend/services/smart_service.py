@@ -214,6 +214,8 @@ def diagnose_fan_hardware() -> dict:
         "module_loaded": False,
         "hwmon_names": [],
         "instructions": None,
+        "board_vendor": None,
+        "board_name": None,
     }
 
     # Check if any PWM paths exist (module already loaded and working)
@@ -241,17 +243,16 @@ def diagnose_fan_hardware() -> dict:
     # If not loaded, try to detect from platform devices
     if not result["chip_detected"]:
         try:
-            platform_devices = os.listdir("/sys/bus/platform/devices/")
-            for dev in platform_devices:
-                dev_lower = dev.lower()
-                # Match by chip name or by family prefix (e.g. nct6775.656 → nct6775 family)
-                for chip in CHIP_MODULE_MAP:
-                    if dev_lower.startswith(chip) or chip in dev_lower:
-                        result["chip_detected"] = chip
-                        result["module_suggested"] = CHIP_MODULE_MAP[chip]
-                        break
-                if result["chip_detected"]:
-                    break
+            vendor = Path("/sys/class/dmi/id/board_vendor").read_text().strip().lower()
+            board = Path("/sys/class/dmi/id/board_name").read_text().strip()
+            result["board_vendor"] = Path("/sys/class/dmi/id/board_vendor").read_text().strip()
+            result["board_name"] = board
+
+            # Most desktop boards from these vendors use nct6775 family
+            nct6775_vendors = ["asrock", "asus", "msi", "gigabyte", "biostar", "asustek"]
+            if any(v in vendor for v in nct6775_vendors):
+                result["chip_detected"] = "nct67xx (detected via board vendor)"
+                result["module_suggested"] = "nct6775"
         except OSError:
             pass
 
