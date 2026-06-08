@@ -244,8 +244,9 @@ def diagnose_fan_hardware() -> dict:
             platform_devices = os.listdir("/sys/bus/platform/devices/")
             for dev in platform_devices:
                 dev_lower = dev.lower()
+                # Match by chip name or by family prefix (e.g. nct6775.656 → nct6775 family)
                 for chip in CHIP_MODULE_MAP:
-                    if chip in dev_lower:
+                    if dev_lower.startswith(chip) or chip in dev_lower:
                         result["chip_detected"] = chip
                         result["module_suggested"] = CHIP_MODULE_MAP[chip]
                         break
