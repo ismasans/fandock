@@ -723,6 +723,13 @@ async function saveCurve() {
   }
 }
 
+async function discardCurve() {
+  const fan = activeFan();
+  delete curves[fan];
+  await loadCurve(fan);
+}
+
+
 document.getElementById('fanSelect').onchange = () => { loadCurve(activeFan()); };
 
 // ── Settings ──────────────────────────────────────────────────────────────────
