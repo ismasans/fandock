@@ -126,15 +126,27 @@ async function doLogin() {
 }
 
 
-function showWizard(isReset) {
+async function showWizard(isReset) {
   document.getElementById('loginView').classList.add('hidden');
   document.getElementById('wizardView').classList.remove('hidden');
-  document.getElementById('wizardStep1').classList.remove('hidden');
-  document.getElementById('wizardStep2').classList.add('hidden');
-  // Show current password field only on reset (password already changed)
-  const currentPwdField = document.getElementById('wizCurrentPwdField');
-  if (currentPwdField) currentPwdField.style.display = isReset ? 'block' : 'none';
   document.getElementById('defaultCredsHint').style.display = 'none';
+
+  if (isReset) {
+    // Skip password change step, go directly to hardware wizard
+    document.getElementById('wizardStep1').classList.add('hidden');
+    document.getElementById('wizardStep2').classList.remove('hidden');
+    const scan = await api('POST', '/settings/scan');
+    if (scan) {
+      serverDisks = scan.disks;
+      allDisks = scan.disks;
+      allFans = scan.fans;
+      serverFans = scan.fans;
+    }
+    buildWizardLists();
+  } else {
+    document.getElementById('wizardStep1').classList.remove('hidden');
+    document.getElementById('wizardStep2').classList.add('hidden');
+  }
 }
 
 async function wizardSetPassword() {
