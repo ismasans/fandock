@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 
-from ..models.schemas import LoginRequest, ChangePasswordRequest, TokenResponse
+from ..models.schemas import LoginRequest, ChangePasswordRequest, TokenResponse, AppConfig
 from ..services.config_service import load_config, save_config, verify_password, hash_password
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
