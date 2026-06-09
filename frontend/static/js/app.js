@@ -568,14 +568,11 @@ function buildChart() {
             if (di === 0 && curves[fan]) {
                 const pts = curves[fan] || [];
                 if (i === pts.length - 1) return false;
-                curves[fan][i] = { t: Math.round(fromDisplay(val.x)), p: Math.round(val.y) };
-                // Enforce monotonically increasing PWM values
-                for (let j = i + 1; j < pts.length - 1; j++) {
-                  if (pts[j].p < pts[j-1].p) pts[j].p = pts[j-1].p;
-                }
-                for (let j = i - 1; j >= 0; j--) {
-                  if (pts[j].p > pts[j+1].p) pts[j].p = pts[j+1].p;
-                }
+                const prevMax = i > 0 ? pts[i-1].p : 0;
+                const nextMin = i < pts.length - 2 ? pts[i+1].p : 100;
+                // Clamp Y between previous and next point
+                const clampedP = Math.max(prevMax, Math.min(nextMin, Math.round(val.y)));
+                curves[fan][i] = { t: Math.round(fromDisplay(val.x)), p: clampedP };
             }
             updateBadge();
           },
@@ -616,18 +613,13 @@ function renderPointRows(doRebuild) {
       pIn.title = 'Last point is always 100%';
     } else {
       pIn.onchange = () => {
-        const newVal = Math.max(0, Math.min(100, parseInt(pIn.value) || 0));
-        curves[fan][i].p = newVal;
-        // Enforce monotonically increasing PWM values
         const pts = curves[fan];
-        // Raise subsequent points that are now lower
-        for (let j = i + 1; j < pts.length - 1; j++) {
-          if (pts[j].p < pts[j-1].p) pts[j].p = pts[j-1].p;
-        }
-        // Lower previous points that are now higher
-        for (let j = i - 1; j >= 0; j--) {
-          if (pts[j].p > pts[j+1].p) pts[j].p = pts[j+1].p;
-        }
+        const prevMax = i > 0 ? pts[i-1].p : 0;
+        const nextMin = i < pts.length - 2 ? pts[i+1].p : 100;
+        // Clamp value between previous and next point
+        const newVal = Math.max(prevMax, Math.min(nextMin, parseInt(pIn.value) || 0));
+        curves[fan][i].p = newVal;
+        pIn.value = newVal; // update input to show clamped value
         refresh();
       };
     }
