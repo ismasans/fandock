@@ -24,6 +24,7 @@ class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     first_run: bool = False
+    is_default_password: bool = True
 
 
 # ---------------------------------------------------------------------------

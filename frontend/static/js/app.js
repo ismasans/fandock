@@ -119,19 +119,21 @@ async function doLogin() {
   token = data.access_token;
   localStorage.setItem('fd_token', token);
   if (data.first_run) {
-    showWizard();
+    showWizard(!data.is_default_password);
   } else {
     showApp();
   }
 }
 
 
-function showWizard() {
+function showWizard(isReset) {
   document.getElementById('loginView').classList.add('hidden');
   document.getElementById('wizardView').classList.remove('hidden');
   document.getElementById('wizardStep1').classList.remove('hidden');
   document.getElementById('wizardStep2').classList.add('hidden');
-  // Hide default creds hint once wizard is shown
+  // Show current password field only on reset (password already changed)
+  const currentPwdField = document.getElementById('wizCurrentPwdField');
+  if (currentPwdField) currentPwdField.style.display = isReset ? 'block' : 'none';
   document.getElementById('defaultCredsHint').style.display = 'none';
 }
 
@@ -142,7 +144,8 @@ async function wizardSetPassword() {
   err.style.display = 'none';
   if (next.length < 6) { err.textContent = 'Password must be at least 6 characters.'; err.style.display = 'block'; return; }
   if (next !== confirm) { err.textContent = T.pwdMismatch; err.style.display = 'block'; return; }
-  const data = await api('POST', '/auth/change-password', { current_password: 'fandock', new_password: next });
+  const currentPwd = document.getElementById('wizPwdCurrent').value || 'fandock';
+  const data = await api('POST', '/auth/change-password', { current_password: currentPwd, new_password: next });
   if (!data) { err.textContent = 'Error changing password. Try again.'; err.style.display = 'block'; return; }
   // Scan hardware before showing step 2
   const scan = await api('POST', '/settings/scan');

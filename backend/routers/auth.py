@@ -56,7 +56,11 @@ async def login(req: LoginRequest):
     cfg = load_config()
     if req.username != "admin" or not verify_password(req.password, cfg.password_hash):
         raise HTTPException(status_code=401, detail="Invalid credentials")
-    return TokenResponse(access_token=_create_token("admin"), first_run=cfg.first_run)
+    return TokenResponse(
+        access_token=_create_token("admin"), 
+        first_run=cfg.first_run,
+        is_default_password=verify_password("fandock", cfg.password_hash)
+    )
 
 
 @router.post("/change-password")
