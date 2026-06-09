@@ -68,7 +68,7 @@
     <i class="ti ti-alert-triangle" style="font-size:18px;flex-shrink:0;margin-top:1px;"></i>
     <div>
       <strong style="font-weight:500;">Important:</strong> FanDock controls the fans connected to your disk enclosure. Incorrect configuration may reduce airflow and shorten drive lifespan. Always verify your fan mapping using the Test button in Settings before saving a curve.
-      <button class="dismiss-btn" onclick="document.getElementById('onboardBanner').style.display='none'">Dismiss</button>
+      <button class="dismiss-btn" onclick="dismissBanner()">Dismiss</button>
     </div>
   </div>
 
@@ -94,6 +94,8 @@
         </button>
         <div class="user-dropdown hidden" id="userDropdown">
           <button onclick="openChangePwd()"><i class="ti ti-lock" style="font-size:14px;color:var(--color-text-secondary);"></i>Change password</button>
+          <div class="divider"></div>
+          <button onclick="resetConfig()"><i class="ti ti-refresh" style="font-size:14px;color:var(--color-text-secondary);"></i>Reset configuration</button>
           <div class="divider"></div>
           <button class="danger" onclick="doLogout()"><i class="ti ti-logout" style="font-size:14px;"></i>Log out</button>
         </div>
@@ -232,11 +234,11 @@
           <button class="unit-btn" id="btnF" onclick="setUnit('F')">°F</button>
         </div>
       </div>
+      <!--
       <div class="toggle-row">
         <div><div class="toggle-label">Alert on critical temperature</div><div class="toggle-sub">Show a warning banner when a disk reaches critical level</div></div>
         <label class="toggle"><input type="checkbox" checked id="alertToggle"><span class="toggle-slider"></span></label>
       </div>
-      <!--
       <div class="toggle-row">
         <div><div class="toggle-label">Enable monitoring</div><div class="toggle-sub">Poll SMART temperatures at the configured interval</div></div>
         <label class="toggle"><input type="checkbox" checked id="monitorToggle"><span class="toggle-slider"></span></label>

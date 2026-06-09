@@ -58,7 +58,7 @@ const T = {
 // ── State ────────────────────────────────────────────────────────────────────
 let token = localStorage.getItem('fd_token') || null;
 let unit = 'C';
-let alertEnabled = true;
+// let alertEnabled = true;
 let chart = null;
 let curves = {};           // { fan_id: [{t, p}, ...] }
 let serverDisks = [];      // dashboard snapshot
@@ -252,6 +252,12 @@ function closePwdModal() { document.getElementById('pwdModal').classList.add('hi
 
 // ── App bootstrap ─────────────────────────────────────────────────────────────
 async function showApp() {
+  // Hide onboarding banner if previously dismissed
+  const bannerDismissed = localStorage.getItem('fd_banner_dismissed');
+  if (bannerDismissed) {
+    const banner = document.getElementById('onboardBanner');
+    if (banner) banner.style.display = 'none';
+  }
   document.getElementById('loginView').classList.add('hidden');
   document.getElementById('wizardView').classList.add('hidden');
   document.getElementById('mainView').classList.remove('hidden');
@@ -339,7 +345,7 @@ async function fetchSnapshot() {
   serverFans  = data.fans  || [];
   renderDiskGrid();
   renderFanPanel();
-  if (alertEnabled && data.any_critical) showCriticalBanner();
+  if (data.any_critical) showCriticalBanner();
 }
 
 async function forceRefresh() {
@@ -349,7 +355,7 @@ async function forceRefresh() {
   serverFans  = data.fans  || [];
   renderDiskGrid();
   renderFanPanel();
-  if (alertEnabled && data.any_critical) showCriticalBanner();
+  if (data.any_critical) showCriticalBanner();
 }
 
 // ── Dashboard ─────────────────────────────────────────────────────────────────
@@ -739,7 +745,7 @@ async function loadSettings() {
   unit = settingsData.temp_unit || 'C';
   document.getElementById('btnC').classList.toggle('active', unit === 'C');
   document.getElementById('btnF').classList.toggle('active', unit === 'F');
-  document.getElementById('alertToggle').checked = alertEnabled;
+  // document.getElementById('alertToggle').checked = alertEnabled;
   if (settingsData.all_disks && settingsData.all_disks.length > 0) {
     allDisks = settingsData.all_disks;
   }
@@ -966,7 +972,7 @@ async function saveSettings() {
   }
 
   // Save global settings (single call)
-  alertEnabled = document.getElementById('alertToggle').checked;
+  // alertEnabled = document.getElementById('alertToggle').checked;
   await api('PATCH', '/settings/global', { 
     temp_unit: unit,
     unmonitored_disks: unmonitored,
@@ -988,4 +994,19 @@ async function discardSettings() {
     if (settingsData.all_fans && settingsData.all_fans.length > 0) allFans = settingsData.all_fans;
   }
   showView('dashboard', document.getElementById('navDash'));
+}
+
+// ── Dismiss banner ──────────────────────────────────────────────────────────────────
+function dismissBanner() {
+  document.getElementById('onboardBanner').style.display = 'none';
+  localStorage.setItem('fd_banner_dismissed', '1');
+}
+
+// ── Reset config ──────────────────────────────────────────────────────────────────
+async function resetConfig() {
+  if (!confirm('This will reset all configuration (disk names, fan curves, settings) and restart the setup wizard.\n\nYour password will be kept.\n\nContinue?')) return;
+  toggleUserMenu(false);
+  await api('POST', '/auth/reset-config');
+  localStorage.removeItem('fd_banner_dismissed');
+  doLogout();
 }

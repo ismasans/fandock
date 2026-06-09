@@ -94,3 +94,15 @@ async def get_version():
     if not v:
         v = pathlib.Path("/app/VERSION").read_text().strip() if pathlib.Path("/app/VERSION").exists() else "dev"
     return {"version": v}
+
+
+@router.post("/reset-config")
+async def reset_config(_user: str = Depends(get_current_user)):
+    cfg = load_config()
+    # Keep password, reset everything else
+    new_cfg = AppConfig(
+        password_hash=cfg.password_hash,
+        first_run=True,
+    )
+    save_config(new_cfg)
+    return {"ok": True}
