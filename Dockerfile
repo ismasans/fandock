@@ -1,7 +1,6 @@
-FROM python:3.14-slim
+FROM python:3.13-slim
 
 # Install system dependencies: smartmontools, lsblk, build tools for compiling packages
-# libssl-dev and gcc are needed for cryptography/bcrypt compilation on Python 3.14
 RUN apt-get update && apt-get install -y --no-install-recommends \
     smartmontools \
     util-linux \
@@ -16,12 +15,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Upgrade pip and install build tools first with retry
+# Upgrade pip and install build tools
 RUN pip install --upgrade --default-timeout=1000 pip setuptools wheel
 
-# Install Python dependencies with increased timeout and retries
+# Install Python dependencies
 COPY backend/requirements.txt ./requirements.txt
-RUN pip install --no-cache-dir --default-timeout=1000 --retries 3 -r requirements.txt
+RUN pip install --no-cache-dir --default-timeout=1000 -r requirements.txt
 
 # Copy application
 COPY backend/ ./backend/
