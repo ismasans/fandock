@@ -188,6 +188,7 @@ function buildWizardLists() {
         <span class="disk-type-badge">${d.type}</span>
         <input class="cfg-input" id="wizDisk-${i}" placeholder="e.g. IronWolf 1" value="${d.friendly_name || ''}" style="flex:1;">
       </div>`;
+    diskList.appendChild(row);
   });
 
   const fanList = document.getElementById('wizFanList');
