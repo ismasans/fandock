@@ -1,10 +1,13 @@
-FROM python:3.13-slim
+FROM python:3.14-slim
 
 # smartmontools for SMART data, lsblk (util-linux) for disk discovery
+# build-essential and python3-dev needed for compiling packages like bcrypt, cryptography
 RUN apt-get update && apt-get install -y --no-install-recommends \
     smartmontools \
     util-linux \
     lm-sensors \
+    build-essential \
+    python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
