@@ -177,16 +177,17 @@ function buildWizardLists() {
   diskList.innerHTML = '';
   serverDisks.forEach((d, i) => {
     const row = document.createElement('div');
-    row.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:8px;';
+    row.style.cssText = 'display:flex;flex-direction:column;gap:6px;margin-bottom:12px;padding:.75rem;background:var(--color-background-secondary);border-radius:var(--border-radius-md);';
     row.innerHTML = `
-      <div style="min-width:80px;">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
         <code style="font-size:12px;color:var(--color-text-secondary);">${d.device}</code>
-        <div style="font-size:11px;color:var(--color-text-tertiary);">${d.model || ''}</div>
-        <div style="font-size:11px;color:var(--color-text-tertiary);">${d.serial || ''}</div>
+        <span style="font-size:12px;color:var(--color-text-tertiary);">${d.model || ''}</span>
+        <span style="font-size:11px;color:var(--color-text-tertiary);">${d.serial || ''}</span>
       </div>
-      <span class="disk-type-badge">${d.type}</span>
-      <input class="cfg-input" id="wizDisk-${i}" placeholder="e.g. IronWolf 1" value="${d.friendly_name || ''}">`;
-    diskList.appendChild(row);
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span class="disk-type-badge">${d.type}</span>
+        <input class="cfg-input" id="wizDisk-${i}" placeholder="e.g. IronWolf 1" value="${d.friendly_name || ''}" style="flex:1;">
+      </div>`;
   });
 
   const fanList = document.getElementById('wizFanList');
