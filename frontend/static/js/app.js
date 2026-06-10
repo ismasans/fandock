@@ -179,7 +179,11 @@ function buildWizardLists() {
     const row = document.createElement('div');
     row.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:8px;';
     row.innerHTML = `
-      <code style="font-size:12px;color:var(--color-text-secondary);min-width:80px;">${d.device}</code>
+      <div style="min-width:80px;">
+        <code style="font-size:12px;color:var(--color-text-secondary);">${d.device}</code>
+        <div style="font-size:11px;color:var(--color-text-tertiary);">${d.model || ''}</div>
+        <div style="font-size:11px;color:var(--color-text-tertiary);">${d.serial || ''}</div>
+      </div>
       <span class="disk-type-badge">${d.type}</span>
       <input class="cfg-input" id="wizDisk-${i}" placeholder="e.g. IronWolf 1" value="${d.friendly_name || ''}">`;
     diskList.appendChild(row);
