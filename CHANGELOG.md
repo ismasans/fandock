@@ -2,6 +2,32 @@
 
 All notable changes to FanDock will be documented in this file.
 
+## [0.1.0] - 2026-06-10
+
+### Added
+- Per-fan linked disks — each fan curve reacts to selected disk temps
+- Fan hardware diagnostic panel with kernel module instructions
+- Improved fan test: stop → wait → spin at 100% to identify fans physically
+- Reset configuration option (keeps password, relaunches wizard)
+- Persistent onboarding banner dismiss
+- Footer with GitHub and issue report links
+- Version display in topbar and footer
+- GitHub Actions CI/CD — auto-build and push to Docker Hub on every commit
+- lm-sensors included in Docker image
+- Responsive layout for mobile devices
+
+### Fixed
+- Fan IDs now match chip numbering (fan1-fan7)
+- Disk names use serial number as stable key (survives reboots)
+- Last curve point always forced to 100%
+- Curve points clamped between adjacent points (no mountain-shape curves)
+- zvol devices filtered from disk scan
+- PWM control released to BIOS on app shutdown
+- Fan control loop paused during fan test
+- Immediate dashboard refresh after saving settings
+- Curve editor shows only controlled fans
+- Settings fan RPM auto-refreshes every 5 seconds
+
 ## [0.0.1] - 2026-06-04
 
 ### Added
@@ -9,18 +35,9 @@ All notable changes to FanDock will be documented in this file.
 - Dashboard with disk temperatures (HDD/SSD/NVMe auto-detected)
 - Fan status monitoring with RPM display
 - Fan curve editor with drag-to-edit support
-- Per-fan linked disks — each fan curve reacts to selected disk temps
 - Settings: hardware auto-scan, friendly names, PWM mapping
 - Fan Test button (wizard and settings)
 - Login / logout / password change
 - First-run wizard for hardware identification
 - Monitor and Control toggles per disk and fan
-- PWM control released to BIOS on app shutdown
 - Docker single-container deployment
-
-### Fixed
-- Fan IDs now match chip numbering (fan1-fan7)
-- Disk names use serial number as stable key
-- Last curve point always forced to 100%
-- Curve points enforce monotonically increasing PWM values
-- zvol devices filtered from disk scan
