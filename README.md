@@ -63,7 +63,7 @@ This resets the password to `fandock` and triggers the first-run wizard on next 
 
 | Layer | Technology |
 |-------|------------|
-| Backend | FastAPI (Python 3.11) |
+| Backend | FastAPI (Python 3.13) |
 | Frontend | HTML + JS + Chart.js |
 | Container | Single Docker image |
 | Config | JSON on mounted volume |
