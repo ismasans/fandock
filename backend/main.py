@@ -63,6 +63,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Health check endpoint
+@app.get("/health")
+async def health():
+    """Health check endpoint for container monitoring."""
+    return {"status": "ok", "version": _version}
+
 # API routers
 app.include_router(auth.router)
 app.include_router(dashboard.router)
