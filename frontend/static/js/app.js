@@ -294,7 +294,11 @@ async function showApp() {
   showView('dashboard', document.getElementById('navDash'));
   // Load version
   api('GET', '/auth/version').then(d => {
-    if (d) document.getElementById('appVersion').textContent = `v${d.version}`;
+    if (d) {
+      document.getElementById('appVersion').textContent = `v${d.version}`;
+      const footerV = document.getElementById('footerVersion');
+      if (footerV) footerV.textContent = `v${d.version}`;
+    }
   });
   startPolling();
 }
