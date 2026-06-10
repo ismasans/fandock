@@ -1,20 +1,27 @@
 FROM python:3.14-slim
 
-# smartmontools for SMART data, lsblk (util-linux) for disk discovery
-# build-essential and python3-dev needed for compiling packages like bcrypt, cryptography
+# Install system dependencies: smartmontools, lsblk, build tools for compiling packages
+# libssl-dev and gcc are needed for cryptography/bcrypt compilation on Python 3.14
 RUN apt-get update && apt-get install -y --no-install-recommends \
     smartmontools \
     util-linux \
     lm-sensors \
     build-essential \
     python3-dev \
-    && rm -rf /var/lib/apt/lists/*
+    libssl-dev \
+    libffi-dev \
+    gcc \
+    g++ \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 WORKDIR /app
 
+# Upgrade pip and install build tools first
+RUN pip install --upgrade pip setuptools wheel
+
 # Install Python dependencies
 COPY backend/requirements.txt ./requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --default-timeout=1000 -r requirements.txt
 
 # Copy application
 COPY backend/ ./backend/
