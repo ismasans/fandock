@@ -50,9 +50,59 @@ const T = {
   hardwareDetection: 'Hardware detection',
   hardwareDesc: 'FanDock detected the following hardware automatically. Assign friendly names and configure each device.',
   disks: 'Disks', fans: 'Fans', preferences: 'Preferences',
-  fansDesc: 'Map each PWM channel to a physical fan. Use Test to spin it at full speed for 3 seconds to identify it physically.',
+  fansDesc: 'Map each PWM channel to a physical fan. Use Test to stop fan for 10 seconds and then spin it at full speed for 10 seconds to identify it physically.',
   fanCurveEditor: 'Fan curve editor',
   temperature: 'Temperature', fanSpeed: 'Fan speed (%)',
+  warnBelow20: 'Warning: minimum fan speed below 20% may reduce airflow and shorten drive lifespan.',
+  usernameLabel: 'Username',
+  passwordLabel: 'Password',
+  loginAppDesc: 'Disk temperature fan controller',
+  // Auth / wizard
+  defaultCreds: 'Default credentials:',
+  defaultCredsNote: 'You will be asked to change your password after signing in.',
+  forgotPassword: 'Forgot your password?',
+  welcomeTitle: 'Welcome to FanDock',
+  welcomeSubtitle: "Let's identify your hardware before you start.",
+  wizStep1Desc: 'First, set a secure password to protect access to FanDock.',
+  setPasswordContinue: 'Set password & continue',
+  wizStep2Desc: 'FanDock has scanned your hardware. Assign friendly names to identify each device.',
+  fanCurvesDefault: 'Fan curves will use optimized defaults. You can adjust them later in the Curves section.',
+  finishSetup: 'Finish setup',
+  pwdTooShort: 'Password must be at least 6 characters.',
+  pwdChangeError: 'Error changing password. Try again.',
+  // Settings / hardware
+  serial: 'Serial',
+  noFansDetected: 'No PWM-controllable fans detected. You can configure them later in Settings.',
+  noDisksDetected: 'No disks detected. Run a scan in Settings first.',
+  openSourceNas: 'Open-source NAS fan controller',
+  // Curve editor
+  lastPointFixed: 'Last point is always 100%',
+  removePoint: 'Remove point',
+  linkedDisksLabel: 'Linked disks — this curve reacts to the hottest selected disk',
+  curveHint: 'Drag points on the chart or edit values in the table. Points auto-sort by temperature.',
+  // Fan test
+  fanTestAlreadyRunning: 'A fan test is already in progress. Please wait.',
+  fanTestConfirm: '⚠️ Fan Test\n\nThe fan will stop completely, then spin at 100%.\n\nDo NOT use this on CPU fans — it may cause overheating.\n\nContinue?',
+  // Reset config
+  resetConfigConfirm: 'This will reset all configuration (disk names, fan curves, settings) and restart the setup wizard.\n\nYour password will be kept.\n\nContinue?',
+  // Fan diagnostic
+  diagChipDriverNotLoaded: 'Fan chip detected but driver not loaded:',
+  diagLoadNow: 'Load now (via SSH on your NAS):',
+  diagPersistTruenas: 'Make it persistent on TrueNAS:',
+  diagPersistLinux: 'Make it persistent on Linux:',
+  diagAfterRescan: 'After loading the module, click Re-scan hardware again.',
+  diagAlternativeModule: "If fans don't appear after Re-scan, try:",
+  diagNoChip: 'No fan controller chip detected.',
+  diagNoChipDesc: 'Your motherboard may use an unsupported chip. Check if sensors detects any fan controllers on your system. You can open an issue at github.com/ismasans/fandock with your hardware details.',
+  diagChipOk: 'Fan controller detected:',
+  diagPwmAvailable: '— PWM control available.',
+  // Footer / nav
+  githubLink: 'GitHub',
+  reportIssue: 'Report issue',
+  // User menu
+  resetConfiguration: 'Reset configuration',
+  // Onboarding banner
+  onboardImportant: 'Important:',
 };
 
 // ── State ────────────────────────────────────────────────────────────────────
@@ -154,11 +204,11 @@ async function wizardSetPassword() {
   const confirm = document.getElementById('wizPwdConfirm').value;
   const err     = document.getElementById('wizPwdErr');
   err.style.display = 'none';
-  if (next.length < 6) { err.textContent = 'Password must be at least 6 characters.'; err.style.display = 'block'; return; }
+  if (next.length < 6) { err.textContent = T.pwdTooShort; err.style.display = 'block'; return; }
   if (next !== confirm) { err.textContent = T.pwdMismatch; err.style.display = 'block'; return; }
   const currentPwd = document.getElementById('wizPwdCurrent').value || 'fandock';
   const data = await api('POST', '/auth/change-password', { current_password: currentPwd, new_password: next });
-  if (!data) { err.textContent = 'Error changing password. Try again.'; err.style.display = 'block'; return; }
+  if (!data) { err.textContent = T.pwdChangeError; err.style.display = 'block'; return; }
   // Scan hardware before showing step 2
   const scan = await api('POST', '/settings/scan');
   if (scan) {
@@ -194,7 +244,7 @@ function buildWizardLists() {
   const fanList = document.getElementById('wizFanList');
   fanList.innerHTML = '';
   if (serverFans.length === 0) {
-    fanList.innerHTML = '<p style="font-size:12px;color:var(--color-text-tertiary);">No PWM-controllable fans detected. You can configure them later in Settings.</p>';
+    fanList.innerHTML = `<p style="font-size:12px;color:var(--color-text-tertiary);">${T.noFansDetected}</p>`;
     return;
   }
   serverFans.forEach((f, i) => {
@@ -203,7 +253,7 @@ function buildWizardLists() {
     row.innerHTML = `
       <code style="font-size:12px;color:var(--color-text-secondary);min-width:80px;">${f.fan_id}</code>
       <input class="cfg-input" id="wizFan-${i}" placeholder="e.g. Front intake" value="${f.friendly_name || ''}">
-      <button class="test-btn" onclick="testFan('${f.fan_id}', this)"><i class="ti ti-player-play" style="font-size:11px;margin-right:3px;"></i>Test</button>`;
+      <button class="test-btn" onclick="testFan('${f.fan_id}', this)"><i class="ti ti-player-play" style="font-size:11px;margin-right:3px;"></i>${T.test}</button>`;
     fanList.appendChild(row);
   });
 }
@@ -394,7 +444,7 @@ function threshClass(disk) {
 
 function threshTooltip(disk) {
   const t = DISK_THRESHOLDS[disk.type] || DISK_THRESHOLDS.HDD;
-  return `${disk.type} thresholds — Warm: ${toDisplay(t.warm)}${unitLabel()} · Hot: ${toDisplay(t.hot)}${unitLabel()} · Critical: ${toDisplay(t.critical)}${unitLabel()}`;
+  return `${disk.type} thresholds — ${T.warm}: ${toDisplay(t.warm)}${unitLabel()} · ${T.hot}: ${toDisplay(t.hot)}${unitLabel()} · ${T.critical}: ${toDisplay(t.critical)}${unitLabel()}`;
 }
 
 function toDisplay(c) {
@@ -641,7 +691,7 @@ function renderPointRows(doRebuild) {
     if (isLastPoint) {
       pIn.disabled = true;
       pIn.style.opacity = '0.5';
-      pIn.title = 'Last point is always 100%';
+      pIn.title = T.lastPointFixed;
     } else {
       pIn.onchange = () => {
         const pts = curves[fan];
@@ -654,7 +704,7 @@ function renderPointRows(doRebuild) {
         refresh();
       };
     }
-    const del = document.createElement('button'); del.className = 'del-btn'; del.title = 'Remove point';
+    const del = document.createElement('button'); del.className = 'del-btn'; del.title = T.removePoint;
     del.innerHTML = '<i class="ti ti-trash"></i>';
     const isFirst = i === 0;
     const isLast = i === (curves[fan] || []).length - 1;
@@ -693,7 +743,7 @@ function renderLinkedDisks() {
   // Use allDisks if available, otherwise serverDisks
   const diskList = allDisks.length > 0 ? allDisks : serverDisks;
   if (diskList.length === 0) {
-    container.innerHTML = '<p style="font-size:12px;color:var(--color-text-tertiary);">No disks detected. Run a scan in Settings first.</p>';
+    container.innerHTML = `<p style="font-size:12px;color:var(--color-text-tertiary);">${T.noDisksDetected}</p>`;
     return;
   }
 
@@ -841,12 +891,10 @@ function onFanMonitorChange(i) {
 
 async function testFan(id, btnEl) {
   if (window._testRunning) {
-    alert('A fan test is already in progress. Please wait.');
+    alert(T.fanTestAlreadyRunning);
     return;
   }
-  const confirmed = confirm(
-    '⚠️ Fan Test\n\nThe fan will stop completely, then spin at 100%.\n\nDo NOT use this on CPU fans — it may cause overheating.\n\nContinue?'
-  );
+  const confirmed = confirm(T.fanTestConfirm);
   if (!confirmed) return;
   window._testRunning = true;
   // Disable all test buttons
@@ -919,7 +967,7 @@ function showFanDiagnostic(diag, panel) {
     panel.style.background = 'var(--color-background-success)';
     panel.style.border = '0.5px solid var(--color-border-success)';
     panel.style.color = 'var(--color-text-success)';
-    panel.innerHTML = `<i class="ti ti-check" style="margin-right:6px;"></i>Fan controller detected: <strong>${diag.chip_detected}</strong> — PWM control available.`;
+    panel.innerHTML = `<i class="ti ti-check" style="margin-right:6px;"></i>${T.diagChipOk} <strong>${diag.chip_detected}</strong> ${T.diagPwmAvailable}`;
     return;
   }
   if (diag.chip_detected && !diag.module_loaded) {
@@ -928,16 +976,16 @@ function showFanDiagnostic(diag, panel) {
     panel.style.color = 'var(--color-text-warning)';
     panel.innerHTML = `
       <i class="ti ti-alert-triangle" style="margin-right:6px;"></i>
-      <strong>Fan chip detected but driver not loaded:</strong> ${diag.chip_detected}<br><br>
-      <strong>Load now</strong> (via SSH on your NAS):<br>
+      <strong>${T.diagChipDriverNotLoaded}</strong> ${diag.chip_detected}<br><br>
+      <strong>${T.diagLoadNow}</strong><br>
       <code style="display:block;margin:.5rem 0;padding:.4rem .6rem;background:rgba(0,0,0,.1);border-radius:4px;">${diag.instructions.load_now}</code>
-      <strong>Make it persistent on TrueNAS:</strong><br>
+      <strong>${T.diagPersistTruenas}</strong><br>
       <span style="font-size:12px;">${diag.instructions.persist_truenas}</span><br><br>
-      <strong>Make it persistent on Linux:</strong><br>
+      <strong>${T.diagPersistLinux}</strong><br>
       <code style="display:block;margin:.5rem 0;padding:.4rem .6rem;background:rgba(0,0,0,.1);border-radius:4px;">${diag.instructions.persist_linux}</code>
-      After loading the module, click <strong>Re-scan hardware</strong> again.`;
+      ${T.diagAfterRescan}`;
       if (diag.module_alternative) {
-        panel.innerHTML += `<br><strong>If fans don't appear after Re-scan, try:</strong><br>
+        panel.innerHTML += `<br><strong>${T.diagAlternativeModule}</strong><br>
           <code style="display:block;margin:.5rem 0;padding:.4rem .6rem;background:rgba(0,0,0,.1);border-radius:4px;">modprobe ${diag.module_alternative}</code>`;
       }
     return;
@@ -948,11 +996,9 @@ function showFanDiagnostic(diag, panel) {
   panel.style.color = 'var(--color-text-danger)';
   panel.innerHTML = `
     <i class="ti ti-x" style="margin-right:6px;"></i>
-    <strong>No fan controller chip detected.</strong><br>
+    <strong>${T.diagNoChip}</strong><br>
     <span style="font-size:12px;margin-top:.5rem;display:block;">
-      Your motherboard may use an unsupported chip. 
-      Check if <code>sensors</code> detects any fan controllers on your system.
-      You can open an issue at <a href="https://github.com/ismasans/fandock/issues" target="_blank">github.com/ismasans/fandock</a> with your hardware details.
+        ${T.diagNoChipDesc}
     </span>`;
 }
 
@@ -1029,7 +1075,7 @@ function dismissBanner() {
 
 // ── Reset config ──────────────────────────────────────────────────────────────────
 async function resetConfig() {
-  if (!confirm('This will reset all configuration (disk names, fan curves, settings) and restart the setup wizard.\n\nYour password will be kept.\n\nContinue?')) return;
+  if (!confirm(T.resetConfigConfirm)) return;
   toggleUserMenu(false);
   await api('POST', '/auth/reset-config');
   localStorage.removeItem('fd_banner_dismissed');
