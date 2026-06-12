@@ -1,121 +1,27 @@
-// ── i18n strings ──────────────────────────────────────────────────────────────
-const T = {
-  dashboard: 'Dashboard',
-  curves: 'Curves',
-  settings: 'Settings',
-  signIn: 'Sign in',
-  logout: 'Log out',
-  changePassword: 'Change password',
-  currentPassword: 'Current password',
-  newPassword: 'New password',
-  confirmPassword: 'Confirm new password',
-  updatePassword: 'Update password',
-  cancel: 'Cancel',
-  saveSettings: 'Save settings',
-  discardChanges: 'Discard changes',
-  saveCurve: 'Save curve',
-  addPoint: 'Add point',
-  rescan: 'Re-scan hardware',
-  test: 'Test',
-  testing: 'Testing…',
-  diskTemps: 'Disk temperatures',
-  fanStatus: 'Fan status',
-  hoverThreshold: '— hover a disk to see its specific thresholds',
-  loginError: 'Incorrect username or password.',
-  pwdMismatch: 'Passwords do not match.',
-  pwdWrongCurrent: 'Current password is incorrect.',
-  pwdUpdated: 'Password updated.',
-  curveBelow20: 'Minimum fan speed is below 20%. This may reduce airflow and shorten drive lifespan. Save anyway?',
-  curveSaved: 'Curve saved.',
-  errorLoadingData: 'Error loading data from server.',
-  scanning: 'scanning…',
-  scanned: 'scanned',
-  normal: 'Normal', warm: 'Warm', hot: 'Hot', critical: 'Critical',
-  fanCurve: 'Fan curve',
-  currentOp: 'Current operating point',
-  temperatureAxis: 'Disk temperature',
-  fanSpeedAxis: 'Fan speed',
-  hottestDisk: 'Hottest disk (auto)',
-  now: 'Now',
-  dragSupport: 'Drag points on the chart to edit the curve, or use the table below.',
-  onboardMsg: 'FanDock controls the fans connected to your disk enclosure. Incorrect configuration may reduce airflow and shorten drive lifespan. Always verify your fan mapping using the Test button in Settings before saving a curve.',
-  dismiss: 'Dismiss',
-  criticalTemp: 'Critical temperature:',
-  smartOk: 'SMART ok',
-  device: 'Device', model: 'Model', type: 'Type', friendlyName: 'Friendly name',
-  monitor: 'Monitor', pwmChannel: 'PWM channel', currentRpm: 'Current RPM',
-  control: 'Control', tempUnits: 'Temperature units', chooseScale: 'Choose your preferred scale',
-  alertOnCritical: 'Alert on critical temperature',
-  alertDesc: 'Show a warning banner when a disk reaches critical level',
-  hardwareDetection: 'Hardware detection',
-  hardwareDesc: 'FanDock detected the following hardware automatically. Assign friendly names and configure each device.',
-  disks: 'Disks', fans: 'Fans', preferences: 'Preferences',
-  fansDesc: 'Map each PWM channel to a physical fan. Use Test to stop fan for 10 seconds and then spin it at full speed for 10 seconds to identify it physically.',
-  fanCurveEditor: 'Fan curve editor',
-  temperature: 'Temperature', fanSpeed: 'Fan speed (%)',
-  warnBelow20: 'Warning: minimum fan speed below 20% may reduce airflow and shorten drive lifespan.',
-  usernameLabel: 'Username',
-  passwordLabel: 'Password',
-  loginAppDesc: 'Disk temperature fan controller',
-  // Auth / wizard
-  defaultCreds: 'Default credentials:',
-  defaultCredsNote: 'You will be asked to change your password after signing in.',
-  forgotPassword: 'Forgot your password?',
-  welcomeTitle: 'Welcome to FanDock',
-  welcomeSubtitle: "Let's identify your hardware before you start.",
-  wizStep1Desc: 'First, set a secure password to protect access to FanDock.',
-  setPasswordContinue: 'Set password & continue',
-  wizStep2Desc: 'FanDock has scanned your hardware. Assign friendly names to identify each device.',
-  fanCurvesDefault: 'Fan curves will use optimized defaults. You can adjust them later in the Curves section.',
-  finishSetup: 'Finish setup',
-  pwdTooShort: 'Password must be at least 6 characters.',
-  pwdChangeError: 'Error changing password. Try again.',
-  // Settings / hardware
-  serial: 'Serial',
-  noFansDetected: 'No PWM-controllable fans detected. You can configure them later in Settings.',
-  noDisksDetected: 'No disks detected. Run a scan in Settings first.',
-  openSourceNas: 'Open-source NAS fan controller',
-  // Curve editor
-  lastPointFixed: 'Last point is always 100%',
-  removePoint: 'Remove point',
-  linkedDisksLabel: 'Linked disks — this curve reacts to the hottest selected disk',
-  curveHint: 'Drag points on the chart or edit values in the table. Points auto-sort by temperature.',
-  // Fan test
-  fanTestAlreadyRunning: 'A fan test is already in progress. Please wait.',
-  fanTestConfirm: '⚠️ Fan Test\n\nThe fan will stop completely, then spin at 100%.\n\nDo NOT use this on CPU fans — it may cause overheating.\n\nContinue?',
-  // Reset config
-  resetConfigConfirm: 'This will reset all configuration (disk names, fan curves, settings) and restart the setup wizard.\n\nYour password will be kept.\n\nContinue?',
-  // Fan diagnostic
-  diagChipDriverNotLoaded: 'Fan chip detected but driver not loaded:',
-  diagLoadNow: 'Load now (via SSH on your NAS):',
-  diagPersistTruenas: 'Make it persistent on TrueNAS:',
-  diagPersistLinux: 'Make it persistent on Linux:',
-  diagAfterRescan: 'After loading the module, click Re-scan hardware again.',
-  diagAlternativeModule: "If fans don't appear after Re-scan, try:",
-  diagNoChip: 'No fan controller chip detected.',
-  diagNoChipDesc: 'Your motherboard may use an unsupported chip. Check if sensors detects any fan controllers on your system. You can open an issue at github.com/ismasans/fandock with your hardware details.',
-  diagChipOk: 'Fan controller detected:',
-  diagPwmAvailable: '— PWM control available.',
-  // Footer / nav
-  githubLink: 'GitHub',
-  reportIssue: 'Report issue',
-  // User menu
-  resetConfiguration: 'Reset configuration',
-  // Onboarding banner
-  onboardImportant: 'Important:',
-};
+// ── Language selection ────────────────────────────────────────────────────────
+let T = TRANSLATIONS.en;
+
+function _detectBrowserLang() {
+  const lang = (navigator.language || '').split('-')[0].toLowerCase();
+  return TRANSLATIONS[lang] ? lang : 'en';
+}
+
+function applyLanguage(langCode) {
+  T = TRANSLATIONS[langCode] || TRANSLATIONS.en;
+  applyI18n();
+}
 
 // ── State ────────────────────────────────────────────────────────────────────
 let token = localStorage.getItem('fd_token') || null;
 let unit = 'C';
-// let alertEnabled = true;
+let activeLang = _detectBrowserLang();
 let chart = null;
-let curves = {};           // { fan_id: [{t, p}, ...] }
-let serverDisks = [];      // dashboard snapshot
-let allDisks = [];         // all known disks (for settings)
-let allFans = [];          // all known fans (for settings)
-let serverFans = [];       // latest snapshot fans
-let settingsData = null;   // loaded settings
+let curves = {};
+let serverDisks = [];
+let allDisks = [];
+let allFans = [];
+let serverFans = [];
+let settingsData = null;
 let pollTimer = null;
 
 const DISK_THRESHOLDS = {
@@ -124,18 +30,15 @@ const DISK_THRESHOLDS = {
   NVMe: { warm: 55, hot: 65, critical: 75 },
 };
 
-// Show login only when ready
+// Apply browser language immediately so login page is already translated
+applyLanguage(activeLang);
+
 document.addEventListener('DOMContentLoaded', () => {
   if (!token) {
-    // Check if first run to show/hide default creds hint
     fetch('/api/settings/', {method:'GET'}).then(r => {
-      if (r.status === 401) {
-        // Not logged in - check first_run via a public endpoint
-        document.getElementById('loginView').classList.remove('hidden');
-      }
+      if (r.status === 401) document.getElementById('loginView').classList.remove('hidden');
     });
     document.getElementById('loginView').classList.remove('hidden');
-    // Hide hint by default, only show if server confirms first_run
     fetch('/api/auth/first-run').then(r => r.json()).then(d => {
       if (!d.first_run) document.getElementById('defaultCredsHint').style.display = 'none';
     }).catch(() => {
@@ -144,6 +47,106 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+// ── i18n DOM application ──────────────────────────────────────────────────────
+function applyI18n() {
+  const s = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+  const h = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
+  // Login
+  s('loginSubtitle', T.loginAppDesc);
+  s('loginErr', T.loginError);
+  s('labelUser', T.usernameLabel);
+  s('labelPass', T.passwordLabel);
+  h('hintDefaultCreds', T.defaultCreds + ' <strong>admin</strong> / <strong>fandock</strong>');
+  s('hintDefaultCredsNote', T.defaultCredsNote);
+  s('hintForgotPwd', T.forgotPassword);
+  s('btnSignIn', T.signIn);
+  // Wizard
+  s('wizTitle', T.welcomeTitle);
+  s('wizSubtitle', T.welcomeSubtitle);
+  s('wizStep1Desc', T.wizStep1Desc);
+  s('labelWizCurrentPwd', T.currentPassword);
+  s('labelWizNewPwd', T.newPassword);
+  s('labelWizConfirmPwd', T.confirmPassword);
+  s('btnWizSetPwd', T.setPasswordContinue);
+  s('wizStep2Desc', T.wizStep2Desc);
+  s('wizDisksLabel', T.disks);
+  s('wizFansLabel', T.fans);
+  s('wizCurvesNote', T.fanCurvesDefault);
+  s('btnWizFinish', T.finishSetup);
+  // Banner
+  s('bannerImportant', T.onboardImportant);
+  s('bannerMsg', T.onboardMsg);
+  s('btnDismiss', T.dismiss);
+  // Nav
+  s('navLabelDash', T.dashboard);
+  s('navLabelCurves', T.curves);
+  s('navLabelSettings', T.settings);
+  // User menu
+  s('menuChangePwd', T.changePassword);
+  s('menuResetConfig', T.resetConfiguration);
+  s('menuLogout', T.logout);
+  // Dashboard
+  s('labelDiskTemps', T.diskTemps);
+  s('legendNormal', T.normal);
+  s('legendWarm', T.warm);
+  s('legendHot', T.hot);
+  s('legendCritical', T.critical);
+  s('legendHoverThreshold', T.hoverThreshold);
+  s('labelFanStatus', T.fanStatus);
+  // Curves
+  s('curvesEditorTitle', T.fanCurveEditor);
+  s('nowLabel', T.now);
+  s('legendFanCurve', T.fanCurve);
+  s('legendCurrentOp', T.currentOp);
+  s('warnBarMsg', T.warnBelow20);
+  s('colTemperature', T.temperature);
+  s('colFanSpeed', T.fanSpeed);
+  s('btnAddPoint', T.addPoint);
+  s('btnDiscardCurve', T.discardChanges);
+  s('btnSaveCurve', T.saveCurve);
+  s('curveHintText', T.curveHint);
+  s('linkedDisksLabel', T.linkedDisksLabel);
+  // Settings
+  s('settingsHwTitle', T.hardwareDetection);
+  s('scanBadge', T.scanned);
+  s('settingsHwDesc', T.hardwareDesc);
+  s('btnRescan', T.rescan);
+  s('settingsDisksTitle', T.disks);
+  s('thDevice', T.device);
+  s('thModel', T.model);
+  s('thSerial', T.serial);
+  s('thType', T.type);
+  s('thFriendlyName', T.friendlyName);
+  s('thMonitor', T.monitor);
+  s('settingsFansTitle', T.fans);
+  s('settingsFansDesc', T.fansDesc);
+  s('thPwmChannel', T.pwmChannel);
+  s('thFanFriendlyName', T.friendlyName);
+  s('thCurrentRpm', T.currentRpm);
+  s('thFanMonitor', T.monitor);
+  s('thControl', T.control);
+  s('settingsPrefsTitle', T.preferences);
+  s('prefTempUnitsLabel', T.tempUnits);
+  s('prefTempUnitsDesc', T.chooseScale);
+  s('prefLangLabel', T.language);
+  s('prefLangDesc', T.languageDesc);
+  s('btnDiscardSettings', T.discardChanges);
+  s('btnSaveSettings', T.saveSettings);
+  // Footer
+  s('footerTagline', T.openSourceNas);
+  s('footerGithub', T.githubLink);
+  s('footerReportIssue', T.reportIssue);
+  // Modal
+  s('modalChangePwdTitle', T.changePassword);
+  s('modalLabelCurrentPwd', T.currentPassword);
+  s('modalLabelNewPwd', T.newPassword);
+  s('modalLabelConfirmPwd', T.confirmPassword);
+  s('modalBtnCancel', T.cancel);
+  s('modalBtnUpdatePwd', T.updatePassword);
+  // Language selector
+  const langSel = document.getElementById('langSelect');
+  if (langSel) langSel.value = activeLang;
+}
 
 // ── API helpers ───────────────────────────────────────────────────────────────
 async function api(method, path, body) {
@@ -168,30 +171,18 @@ async function doLogin() {
   if (!data) { err.style.display = 'block'; return; }
   token = data.access_token;
   localStorage.setItem('fd_token', token);
-  if (data.first_run) {
-    showWizard(!data.is_default_password);
-  } else {
-    showApp();
-  }
+  if (data.first_run) { showWizard(!data.is_default_password); } else { showApp(); }
 }
-
 
 async function showWizard(isReset) {
   document.getElementById('loginView').classList.add('hidden');
   document.getElementById('wizardView').classList.remove('hidden');
   document.getElementById('defaultCredsHint').style.display = 'none';
-
   if (isReset) {
-    // Skip password change step, go directly to hardware wizard
     document.getElementById('wizardStep1').classList.add('hidden');
     document.getElementById('wizardStep2').classList.remove('hidden');
     const scan = await api('POST', '/settings/scan');
-    if (scan) {
-      serverDisks = scan.disks;
-      allDisks = scan.disks;
-      allFans = scan.fans;
-      serverFans = scan.fans;
-    }
+    if (scan) { serverDisks = scan.disks; allDisks = scan.disks; allFans = scan.fans; serverFans = scan.fans; }
     buildWizardLists();
   } else {
     document.getElementById('wizardStep1').classList.remove('hidden');
@@ -209,14 +200,8 @@ async function wizardSetPassword() {
   const currentPwd = document.getElementById('wizPwdCurrent').value || 'fandock';
   const data = await api('POST', '/auth/change-password', { current_password: currentPwd, new_password: next });
   if (!data) { err.textContent = T.pwdChangeError; err.style.display = 'block'; return; }
-  // Scan hardware before showing step 2
   const scan = await api('POST', '/settings/scan');
-  if (scan) {
-    serverDisks = scan.disks;
-    allDisks = scan.disks;
-    serverFans  = scan.fans;
-    allFans = scan.fans;
-  }
+  if (scan) { serverDisks = scan.disks; allDisks = scan.disks; serverFans = scan.fans; allFans = scan.fans; }
   document.getElementById('wizardStep1').classList.add('hidden');
   document.getElementById('wizardStep2').classList.remove('hidden');
   buildWizardLists();
@@ -240,7 +225,6 @@ function buildWizardLists() {
       </div>`;
     diskList.appendChild(row);
   });
-
   const fanList = document.getElementById('wizFanList');
   fanList.innerHTML = '';
   if (serverFans.length === 0) {
@@ -259,33 +243,19 @@ function buildWizardLists() {
 }
 
 async function wizardFinish() {
-  // Save disk friendly names
   const names = {};
-  serverDisks.forEach((d, i) => {
-    const el = document.getElementById(`wizDisk-${i}`);
-    if (el && el.value) names[d.serial] = el.value;
-  });
+  serverDisks.forEach((d, i) => { const el = document.getElementById(`wizDisk-${i}`); if (el && el.value) names[d.serial] = el.value; });
   if (Object.keys(names).length) await api('PUT', '/settings/friendly-names', { names });
-
-  // Save fan friendly names
   for (let i = 0; i < serverFans.length; i++) {
     const el = document.getElementById(`wizFan-${i}`);
-    if (el && el.value) {
-      await api('PATCH', `/settings/fans/${serverFans[i].fan_id}`, { friendly_name: el.value });
-    }
+    if (el && el.value) await api('PATCH', `/settings/fans/${serverFans[i].fan_id}`, { friendly_name: el.value });
   }
-
-  // Mark setup complete
   await api('POST', '/auth/complete-setup');
-
-  // Hide default creds hint permanently
   const hint = document.getElementById('defaultCredsHint');
   if (hint) hint.style.display = 'none';
-
   document.getElementById('wizardView').classList.add('hidden');
   showApp();
 }
-
 
 document.getElementById('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 
@@ -323,44 +293,41 @@ function closePwdModal() { document.getElementById('pwdModal').classList.add('hi
 
 // ── App bootstrap ─────────────────────────────────────────────────────────────
 async function showApp() {
-  // Hide onboarding banner if previously dismissed
   const bannerDismissed = localStorage.getItem('fd_banner_dismissed');
-  if (bannerDismissed) {
-    const banner = document.getElementById('onboardBanner');
-    if (banner) banner.style.display = 'none';
-  }
+  if (bannerDismissed) { const b = document.getElementById('onboardBanner'); if (b) b.style.display = 'none'; }
   document.getElementById('loginView').classList.add('hidden');
   document.getElementById('wizardView').classList.add('hidden');
   document.getElementById('mainView').classList.remove('hidden');
   const hint = document.getElementById('defaultCredsHint');
   if (hint) hint.style.display = 'none';
-  // Load settings data on startup so Curves and other views have it
   settingsData = await api('GET', '/settings/');
   if (settingsData) {
     unit = settingsData.temp_unit || 'C';
+    // Server preference overrides browser detection
+    if (settingsData.language && TRANSLATIONS[settingsData.language]) {
+      activeLang = settingsData.language;
+      applyLanguage(activeLang);
+    }
     if (settingsData.all_disks && settingsData.all_disks.length > 0) allDisks = settingsData.all_disks;
     if (settingsData.all_fans && settingsData.all_fans.length > 0) allFans = settingsData.all_fans;
   }
   showView('dashboard', document.getElementById('navDash'));
-  // Load version
   api('GET', '/auth/version').then(d => {
     if (d) {
       document.getElementById('appVersion').textContent = `v${d.version}`;
-      const footerV = document.getElementById('footerVersion');
-      if (footerV) footerV.textContent = `v${d.version}`;
+      const fv = document.getElementById('footerVersion');
+      if (fv) fv.textContent = `v${d.version}`;
     }
   });
   startPolling();
 }
 
-// Auto-login if token exists - verify with server first
 if (token) {
   api('GET', '/settings/').then(data => {
-    if (!data || data.first_run) { 
-      token = null; 
-      localStorage.removeItem('fd_token');
+    if (!data || data.first_run) {
+      token = null; localStorage.removeItem('fd_token');
       document.getElementById('loginView').classList.remove('hidden');
-      return; 
+      return;
     }
     showApp();
   });
@@ -377,10 +344,8 @@ function showView(name, btn) {
   if (name === 'curves') { buildFanSelects(); buildChart(); renderPointRows(false); renderLinkedDisks(); }
   if (name === 'settings') {
     loadSettings();
-    // Auto-refresh RPM every time defined in POLL_INTERVAL_MS while in Settings
-    _settingsRefreshTimer = setInterval(() => refreshFanRpm(), POLL_INTERVAL_MS); // ← Change interval here to adjust refresh rate (milliseconds)
+    _settingsRefreshTimer = setInterval(() => refreshFanRpm(), POLL_INTERVAL_MS);
   } else {
-    // Stop refreshing when leaving Settings
     if (_settingsRefreshTimer) { clearInterval(_settingsRefreshTimer); _settingsRefreshTimer = null; }
   }
 }
@@ -389,7 +354,6 @@ async function refreshFanRpm() {
   const snap = await api('GET', '/dashboard/snapshot');
   if (!snap || !snap.fans) return;
   snap.fans.forEach(f => {
-    // Find fan index in current list
     const fanList = allFans.length > 0 ? allFans : serverFans;
     const i = fanList.findIndex(ff => ff.fan_id === f.fan_id);
     if (i === -1) return;
@@ -404,12 +368,10 @@ function toggleUserMenu(force) {
   const open = force !== undefined ? force : dd.classList.contains('hidden');
   dd.classList.toggle('hidden', !open);
 }
-document.addEventListener('click', e => {
-  if (!e.target.closest('.user-menu')) toggleUserMenu(false);
-});
+document.addEventListener('click', e => { if (!e.target.closest('.user-menu')) toggleUserMenu(false); });
 
 // ── Polling ───────────────────────────────────────────────────────────────────
-const POLL_INTERVAL_MS = 5000; // ← Global polling interval in milliseconds
+const POLL_INTERVAL_MS = 5000;
 function startPolling() { fetchSnapshot(); pollTimer = setInterval(fetchSnapshot, POLL_INTERVAL_MS); }
 function stopPolling()  { clearInterval(pollTimer); }
 
@@ -447,14 +409,8 @@ function threshTooltip(disk) {
   return `${disk.type} thresholds — ${T.warm}: ${toDisplay(t.warm)}${unitLabel()} · ${T.hot}: ${toDisplay(t.hot)}${unitLabel()} · ${T.critical}: ${toDisplay(t.critical)}${unitLabel()}`;
 }
 
-function toDisplay(c) {
-  if (unit === 'F') return Math.round(c * 9 / 5 + 32);
-  return c;
-}
-function fromDisplay(v) {
-  if (unit === 'F') return Math.round((v - 32) * 5 / 9);
-  return v;
-}
+function toDisplay(c) { return unit === 'F' ? Math.round(c * 9 / 5 + 32) : c; }
+function fromDisplay(v) { return unit === 'F' ? Math.round((v - 32) * 5 / 9) : v; }
 function unitLabel() { return unit === 'F' ? '°F' : '°C'; }
 
 function renderDiskGrid() {
@@ -509,18 +465,14 @@ function activeFan() { return document.getElementById('fanSelect').value; }
 function buildFanSelects() {
   const sel = document.getElementById('fanSelect');
   sel.innerHTML = '';
-  const controlled = (settingsData && settingsData.fans) 
-    ? settingsData.fans.filter(f => f.controlled)
-    : serverFans;
+  const controlled = (settingsData && settingsData.fans) ? settingsData.fans.filter(f => f.controlled) : serverFans;
   controlled.forEach(f => {
     const opt = document.createElement('option');
     opt.value = f.fan_id;
     opt.textContent = f.friendly_name || f.fan_id;
     sel.appendChild(opt);
   });
-  controlled.forEach(f => {
-    if (!curves[f.fan_id]) loadCurve(f.fan_id);
-  });
+  controlled.forEach(f => { if (!curves[f.fan_id]) loadCurve(f.fan_id); });
   renderLinkedDisks();
 }
 
@@ -550,30 +502,21 @@ function interpolate(pts, tempC) {
   return 50;
 }
 
-function sortCurve(fanId) {
-  if (curves[fanId]) curves[fanId].sort((a, b) => a.t - b.t);
-}
+function sortCurve(fanId) { if (curves[fanId]) curves[fanId].sort((a, b) => a.t - b.t); }
 
 function updateBadge() {
   const fan = activeFan();
-  // Get max temp from linked disks only
-  const fanCfg = settingsData && settingsData.fans 
-    ? settingsData.fans.find(f => f.fan_id === fan) 
-    : null;
+  const fanCfg = settingsData && settingsData.fans ? settingsData.fans.find(f => f.fan_id === fan) : null;
   const linked = fanCfg ? (fanCfg.linked_disks || []) : [];
   let tempC;
   if (linked.length > 0) {
-    const linkedTemps = serverDisks
-      .filter(d => linked.includes(d.serial) && d.temperature_c != null)
-      .map(d => d.temperature_c);
+    const linkedTemps = serverDisks.filter(d => linked.includes(d.serial) && d.temperature_c != null).map(d => d.temperature_c);
     tempC = linkedTemps.length > 0 ? Math.max(...linkedTemps) : getMaxTempC();
   } else {
     tempC = getMaxTempC();
   }
-  const tempDisp = toDisplay(tempC);
-  const pct = Math.round(interpolate(curves[fan] || [], tempC));
-  document.getElementById('curTempLabel').textContent = `${tempDisp}${unitLabel()}`;
-  document.getElementById('curFanLabel').textContent = `${pct}%`;
+  document.getElementById('curTempLabel').textContent = `${toDisplay(tempC)}${unitLabel()}`;
+  document.getElementById('curFanLabel').textContent = `${Math.round(interpolate(curves[fan] || [], tempC))}%`;
 }
 
 function buildChart() {
@@ -581,24 +524,19 @@ function buildChart() {
   if (!fan) return;
   sortCurve(fan);
   const pts = curves[fan] || [];
-
   const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const gridColor  = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
-  const textColor  = isDark ? '#aaa' : '#777';
+  const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+  const textColor = isDark ? '#aaa' : '#777';
   const temps = pts.map(p => toDisplay(p.t));
   const padding = unit === 'F' ? 9 : 5;
   const minT = temps.length > 0 ? Math.max(unit === 'F' ? 32 : 0, Math.min(...temps) - padding) : (unit === 'F' ? 59 : 15);
   const maxT = temps.length > 0 ? Math.min(unit === 'F' ? 212 : 100, Math.max(...temps) + padding) : (unit === 'F' ? 185 : 85);
-
   const chartData = pts.map(p => ({ x: toDisplay(p.t), y: p.p }));
   const tempC = getMaxTempC();
   const opPct = interpolate(pts, tempC);
-
   const opData = [{ x: minT, y: opPct }, { x: maxT, y: opPct }];
-
   if (chart) { chart.destroy(); chart = null; }
   const ctx = document.getElementById('curveCanvas').getContext('2d');
-
   chart = new Chart(ctx, {
     type: 'line',
     data: {
@@ -615,12 +553,9 @@ function buildChart() {
           tension: 0,
           fill: true,
           dragData: {
-            round: 1,
-            showTooltip: true,
+            round: 1, showTooltip: true,
             onDragStart: (e, datasetIndex, index) => {
-              const fan = activeFan();
-              const pts = curves[fan] || [];
-              if (index === pts.length - 1) return false;
+              if (index === (curves[activeFan()] || []).length - 1) return false;
             },
           },
         },
@@ -642,27 +577,24 @@ function buildChart() {
       plugins: {
         legend: { display: false },
         dragData: {
-          round: 1,
-          showTooltip: true,
+          round: 1, showTooltip: true,
           onDragStart: () => {},
           onDrag: (e, di, i, val) => {
+            const fan = activeFan();
             if (di === 0 && curves[fan]) {
-                const pts = curves[fan] || [];
-                if (i === pts.length - 1) return false;
-                const prevMax = i > 0 ? pts[i-1].p : 0;
-                const nextMin = i < pts.length - 2 ? pts[i+1].p : 100;
-                // Clamp Y between previous and next point
-                const clampedP = Math.max(prevMax, Math.min(nextMin, Math.round(val.y)));
-                curves[fan][i] = { t: Math.round(fromDisplay(val.x)), p: clampedP };
+              const pts = curves[fan];
+              if (i === pts.length - 1) return false;
+              const prevMax = i > 0 ? pts[i-1].p : 0;
+              const nextMin = i < pts.length - 2 ? pts[i+1].p : 100;
+              curves[fan][i] = { t: Math.round(fromDisplay(val.x)), p: Math.max(prevMax, Math.min(nextMin, Math.round(val.y))) };
             }
             updateBadge();
           },
-          onDragEnd: () => { 
+          onDragEnd: () => {
+            const fan = activeFan();
             const pts = curves[fan] || [];
             if (pts.length > 0) pts[pts.length - 1].p = 100;
-            sortCurve(fan); 
-            buildChart(); 
-            renderPointRows(false); 
+            sortCurve(fan); buildChart(); renderPointRows(false);
           },
         },
       },
@@ -689,29 +621,20 @@ function renderPointRows(doRebuild) {
     const pIn = document.createElement('input'); pIn.className = 'point-input'; pIn.type = 'number'; pIn.min = 0; pIn.max = 100; pIn.value = pt.p;
     const isLastPoint = i === (curves[fan] || []).length - 1;
     if (isLastPoint) {
-      pIn.disabled = true;
-      pIn.style.opacity = '0.5';
-      pIn.title = T.lastPointFixed;
+      pIn.disabled = true; pIn.style.opacity = '0.5'; pIn.title = T.lastPointFixed;
     } else {
       pIn.onchange = () => {
         const pts = curves[fan];
         const prevMax = i > 0 ? pts[i-1].p : 0;
         const nextMin = i < pts.length - 2 ? pts[i+1].p : 100;
-        // Clamp value between previous and next point
         const newVal = Math.max(prevMax, Math.min(nextMin, parseInt(pIn.value) || 0));
-        curves[fan][i].p = newVal;
-        pIn.value = newVal; // update input to show clamped value
-        refresh();
+        curves[fan][i].p = newVal; pIn.value = newVal; refresh();
       };
     }
     const del = document.createElement('button'); del.className = 'del-btn'; del.title = T.removePoint;
     del.innerHTML = '<i class="ti ti-trash"></i>';
-    const isFirst = i === 0;
-    const isLast = i === (curves[fan] || []).length - 1;
-    if (isFirst || isLast) {
-      del.disabled = true;
-      del.style.opacity = '0.3';
-      del.style.cursor = 'not-allowed';
+    if (i === 0 || isLastPoint) {
+      del.disabled = true; del.style.opacity = '0.3'; del.style.cursor = 'not-allowed';
     } else {
       del.onclick = () => { if ((curves[fan] || []).length > 2) { curves[fan].splice(i, 1); refresh(); } };
     }
@@ -733,30 +656,19 @@ function renderLinkedDisks() {
   const container = document.getElementById('curveLinkedDisks');
   if (!container) return;
   container.innerHTML = '';
-
-  // Get current fan config
-  const fanCfg = settingsData && settingsData.fans 
-    ? settingsData.fans.find(f => f.fan_id === fan) 
-    : null;
+  const fanCfg = settingsData && settingsData.fans ? settingsData.fans.find(f => f.fan_id === fan) : null;
   const linked = fanCfg ? (fanCfg.linked_disks || []) : [];
-
-  // Use allDisks if available, otherwise serverDisks
   const diskList = allDisks.length > 0 ? allDisks : serverDisks;
   if (diskList.length === 0) {
     container.innerHTML = `<p style="font-size:12px;color:var(--color-text-tertiary);">${T.noDisksDetected}</p>`;
     return;
   }
-
   diskList.forEach((d, i) => {
-    const name = (settingsData && settingsData.disk_friendly_names && 
-                  (settingsData.disk_friendly_names[d.serial] || settingsData.disk_friendly_names[d.device])) 
-                 || d.device;
-    const isLinked = linked.includes(d.serial);
+    const name = (settingsData && settingsData.disk_friendly_names && (settingsData.disk_friendly_names[d.serial] || settingsData.disk_friendly_names[d.device])) || d.device;
     const row = document.createElement('div');
     row.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:6px;';
     row.innerHTML = `
-      <label class="toggle"><input type="checkbox" ${isLinked ? 'checked' : ''} id="linked-${i}" 
-        onchange="onLinkedDiskChange()"><span class="toggle-slider"></span></label>
+      <label class="toggle"><input type="checkbox" ${linked.includes(d.serial) ? 'checked' : ''} id="linked-${i}" onchange="onLinkedDiskChange()"><span class="toggle-slider"></span></label>
       <span style="font-size:13px;color:var(--color-text-primary);">${name}</span>
       <code style="font-size:11px;color:var(--color-text-tertiary);">${d.serial || d.device}</code>
       <span class="disk-type-badge">${d.type}</span>`;
@@ -768,16 +680,9 @@ async function onLinkedDiskChange() {
   const fan = activeFan();
   const diskList = allDisks.length > 0 ? allDisks : serverDisks;
   const linked = [];
-  diskList.forEach((d, i) => {
-    const el = document.getElementById(`linked-${i}`);
-    if (el && el.checked) linked.push(d.serial);
-  });
+  diskList.forEach((d, i) => { const el = document.getElementById(`linked-${i}`); if (el && el.checked) linked.push(d.serial); });
   await api('PATCH', `/settings/fans/${fan}`, { linked_disks: linked });
-  // Update local settingsData
-  if (settingsData && settingsData.fans) {
-    const fc = settingsData.fans.find(f => f.fan_id === fan);
-    if (fc) fc.linked_disks = linked;
-  }
+  if (settingsData && settingsData.fans) { const fc = settingsData.fans.find(f => f.fan_id === fan); if (fc) fc.linked_disks = linked; }
   updateBadge();
 }
 
@@ -798,18 +703,10 @@ async function saveCurve() {
   if (minP < 20 && !confirm(T.curveBelow20)) return;
   const points = (curves[fan] || []).map(p => ({ temp_c: p.t, pwm_pct: p.p }));
   const data = await api('PUT', `/fans/${fan}/curve`, { fan_id: fan, points });
-  if (data) {
-    await loadCurve(fan);
-    alert(T.curveSaved);
-  }
+  if (data) { await loadCurve(fan); alert(T.curveSaved); }
 }
 
-async function discardCurve() {
-  const fan = activeFan();
-  delete curves[fan];
-  await loadCurve(fan);
-}
-
+async function discardCurve() { const fan = activeFan(); delete curves[fan]; await loadCurve(fan); }
 
 document.getElementById('fanSelect').onchange = () => { loadCurve(activeFan()); };
 
@@ -820,13 +717,10 @@ async function loadSettings() {
   unit = settingsData.temp_unit || 'C';
   document.getElementById('btnC').classList.toggle('active', unit === 'C');
   document.getElementById('btnF').classList.toggle('active', unit === 'F');
-  // document.getElementById('alertToggle').checked = alertEnabled;
-  if (settingsData.all_disks && settingsData.all_disks.length > 0) {
-    allDisks = settingsData.all_disks;
-  }
-  if (settingsData.all_fans && settingsData.all_fans.length > 0) {
-    allFans = settingsData.all_fans;
-  }
+  const langSel = document.getElementById('langSelect');
+  if (langSel) langSel.value = settingsData.language || activeLang;
+  if (settingsData.all_disks && settingsData.all_disks.length > 0) allDisks = settingsData.all_disks;
+  if (settingsData.all_fans && settingsData.all_fans.length > 0) allFans = settingsData.all_fans;
   buildDiskCfg(settingsData);
   buildFanCfg(settingsData);
 }
@@ -866,59 +760,34 @@ function buildFanCfg(cfg) {
       <td><label class="toggle"><input type="checkbox" ${f.controlled ? 'checked' : ''} id="fctrl-${i}"><span class="toggle-slider"></span></label></td>
       <td><button class="test-btn" id="test-${f.fan_id}" onclick="testFan('${f.fan_id}')"><i class="ti ti-player-play" style="font-size:11px;margin-right:3px;"></i>${T.test}</button></td>`;
     tb.appendChild(tr);
-    // Disable control toggle if not monitored
-    if (!monitored) {
-      const ctrlEl = document.getElementById(`fctrl-${i}`);
-      if (ctrlEl) {
-        ctrlEl.checked = false;
-        ctrlEl.disabled = true;
-      }
-    }
+    if (!monitored) { const c = document.getElementById(`fctrl-${i}`); if (c) { c.checked = false; c.disabled = true; } }
   });
 }
 
 function onFanMonitorChange(i) {
-  const monEl = document.getElementById(`fmon-${i}`);
-  const ctrlEl = document.getElementById(`fctrl-${i}`);
-  if (!monEl || !ctrlEl) return;
-  if (!monEl.checked) {
-    ctrlEl.checked = false;
-    ctrlEl.disabled = true;
-  } else {
-    ctrlEl.disabled = false;
-  }
+  const mon = document.getElementById(`fmon-${i}`);
+  const ctrl = document.getElementById(`fctrl-${i}`);
+  if (!mon || !ctrl) return;
+  if (!mon.checked) { ctrl.checked = false; ctrl.disabled = true; } else { ctrl.disabled = false; }
 }
 
 async function testFan(id, btnEl) {
-  if (window._testRunning) {
-    alert(T.fanTestAlreadyRunning);
-    return;
-  }
-  const confirmed = confirm(T.fanTestConfirm);
-  if (!confirmed) return;
+  if (window._testRunning) { alert(T.fanTestAlreadyRunning); return; }
+  if (!confirm(T.fanTestConfirm)) return;
   window._testRunning = true;
-  // Disable all test buttons
   document.querySelectorAll('.test-btn').forEach(b => b.disabled = true);
-  
   const btn = btnEl || document.getElementById('test-' + id);
   const bar = document.getElementById('bar-' + id);
-  if (btn) {
-    btn.classList.add('testing');
-    btn.innerHTML = `<i class="ti ti-player-stop" style="font-size:11px;margin-right:3px;"></i>${T.testing}`;
-  }
+  if (btn) { btn.classList.add('testing'); btn.innerHTML = `<i class="ti ti-player-stop" style="font-size:11px;margin-right:3px;"></i>${T.testing}`; }
   if (bar) { bar.style.width = '100%'; bar.style.background = '#BA7517'; }
   await api('POST', `/fans/${id}/test`);
-  // Poll until test is complete
   const pollTest = setInterval(async () => {
     const status = await api('GET', '/dashboard/test-status');
     if (status && !status.test_in_progress) {
       clearInterval(pollTest);
       window._testRunning = false;
       document.querySelectorAll('.test-btn').forEach(b => b.disabled = false);
-      if (btn) {
-        btn.classList.remove('testing');
-        btn.innerHTML = `<i class="ti ti-player-play" style="font-size:11px;margin-right:3px;"></i>${T.test}`;
-      }
+      if (btn) { btn.classList.remove('testing'); btn.innerHTML = `<i class="ti ti-player-play" style="font-size:11px;margin-right:3px;"></i>${T.test}`; }
       if (bar) bar.style.background = '#378ADD';
     }
   }, 1000);
@@ -932,6 +801,14 @@ function setUnit(u) {
   if (chart) refresh();
 }
 
+function setLanguage(langCode) {
+  if (!TRANSLATIONS[langCode]) return;
+  activeLang = langCode;
+  applyLanguage(langCode);
+  if (serverDisks.length) renderDiskGrid();
+  if (serverFans.length) renderFanPanel();
+}
+
 async function rescanHardware() {
   const badge = document.getElementById('scanBadge');
   badge.textContent = T.scanning;
@@ -942,38 +819,27 @@ async function rescanHardware() {
   badge.style.background = '';
   badge.style.color = '';
   if (data) {
-    serverDisks = data.disks;
-    allDisks = data.disks;
-    serverFans = data.fans;
+    serverDisks = data.disks; allDisks = data.disks; serverFans = data.fans;
     settingsData = await api('GET', '/settings/');
     allFans = settingsData.all_fans || data.fans;
-    buildDiskCfg(settingsData);
-    buildFanCfg(settingsData);
-
-    // Show diagnostic if no fans detected
+    buildDiskCfg(settingsData); buildFanCfg(settingsData);
     const diagPanel = document.getElementById('fanDiagnostic');
     if (data.fans.length === 0 && diagPanel) {
       const diag = await api('GET', '/settings/fan-diagnostic');
       if (diag) showFanDiagnostic(diag, diagPanel);
-    } else if (diagPanel) {
-      diagPanel.classList.add('hidden');
-    }
+    } else if (diagPanel) { diagPanel.classList.add('hidden'); }
   }
 }
 
 function showFanDiagnostic(diag, panel) {
   panel.classList.remove('hidden');
   if (diag.module_loaded && diag.pwm_available) {
-    panel.style.background = 'var(--color-background-success)';
-    panel.style.border = '0.5px solid var(--color-border-success)';
-    panel.style.color = 'var(--color-text-success)';
+    panel.style.cssText = 'background:var(--color-background-success);border:0.5px solid var(--color-border-success);color:var(--color-text-success);';
     panel.innerHTML = `<i class="ti ti-check" style="margin-right:6px;"></i>${T.diagChipOk} <strong>${diag.chip_detected}</strong> ${T.diagPwmAvailable}`;
     return;
   }
   if (diag.chip_detected && !diag.module_loaded) {
-    panel.style.background = 'var(--color-background-warning)';
-    panel.style.border = '0.5px solid var(--color-border-warning)';
-    panel.style.color = 'var(--color-text-warning)';
+    panel.style.cssText = 'background:var(--color-background-warning);border:0.5px solid var(--color-border-warning);color:var(--color-text-warning);';
     panel.innerHTML = `
       <i class="ti ti-alert-triangle" style="margin-right:6px;"></i>
       <strong>${T.diagChipDriverNotLoaded}</strong> ${diag.chip_detected}<br><br>
@@ -984,56 +850,32 @@ function showFanDiagnostic(diag, panel) {
       <strong>${T.diagPersistLinux}</strong><br>
       <code style="display:block;margin:.5rem 0;padding:.4rem .6rem;background:rgba(0,0,0,.1);border-radius:4px;">${diag.instructions.persist_linux}</code>
       ${T.diagAfterRescan}`;
-      if (diag.module_alternative) {
-        panel.innerHTML += `<br><strong>${T.diagAlternativeModule}</strong><br>
-          <code style="display:block;margin:.5rem 0;padding:.4rem .6rem;background:rgba(0,0,0,.1);border-radius:4px;">modprobe ${diag.module_alternative}</code>`;
-      }
+    if (diag.module_alternative) {
+      panel.innerHTML += `<br><strong>${T.diagAlternativeModule}</strong><br>
+        <code style="display:block;margin:.5rem 0;padding:.4rem .6rem;background:rgba(0,0,0,.1);border-radius:4px;">modprobe ${diag.module_alternative}</code>`;
+    }
     return;
   }
-  // No chip detected
-  panel.style.background = 'var(--color-background-danger)';
-  panel.style.border = '0.5px solid var(--color-border-danger)';
-  panel.style.color = 'var(--color-text-danger)';
+  panel.style.cssText = 'background:var(--color-background-danger);border:0.5px solid var(--color-border-danger);color:var(--color-text-danger);';
   panel.innerHTML = `
     <i class="ti ti-x" style="margin-right:6px;"></i>
     <strong>${T.diagNoChip}</strong><br>
-    <span style="font-size:12px;margin-top:.5rem;display:block;">
-        ${T.diagNoChipDesc}
-    </span>`;
+    <span style="font-size:12px;margin-top:.5rem;display:block;">${T.diagNoChipDesc}</span>`;
 }
 
-
 async function saveSettings() {
-  // Save friendly names
   const names = {};
-  const diskListForNames = allDisks.length > 0 ? allDisks : serverDisks;
-  diskListForNames.forEach((d, i) => {
-      const el = document.getElementById(`dname-${i}`);
-      if (el) names[d.serial] = el.value;
-  });
+  (allDisks.length > 0 ? allDisks : serverDisks).forEach((d, i) => { const el = document.getElementById(`dname-${i}`); if (el) names[d.serial] = el.value; });
   await api('PUT', '/settings/friendly-names', { names });
-
-  // Save monitor toggles
   const unmonitored = [];
-  const diskListForSave = allDisks.length > 0 ? allDisks : serverDisks;
-  diskListForSave.forEach((d, i) => {
-      const el = document.getElementById(`dmon-${i}`);
-      if (el && !el.checked) unmonitored.push(d.device);
-  });
-
+  (allDisks.length > 0 ? allDisks : serverDisks).forEach((d, i) => { const el = document.getElementById(`dmon-${i}`); if (el && !el.checked) unmonitored.push(d.device); });
   const unmonitored_fans = [];
-  const fanListForSave = allFans.length > 0 ? allFans : serverFans;
-  fanListForSave.forEach((f, i) => {
-      const el = document.getElementById(`fmon-${i}`);
-      if (el && !el.checked) unmonitored_fans.push(f.fan_id);
-  });
-
-  // Save fan names + controlled toggle
-  const fanListForSave2 = allFans.length > 0 ? allFans : serverFans;
-    for (let i = 0; i < fanListForSave2.length; i++) {
-        const f = fanListForSave2[i];
-        const nameEl = document.getElementById(`fname-${i}`);
-        const ctrlEl = document.getElementById(`fctrl-${i}`);
+  (allFans.length > 0 ? allFans : serverFans).forEach((f, i) => { const el = document.getElementById(`fmon-${i}`); if (el && !el.checked) unmonitored_fans.push(f.fan_id); });
+  const fanList = allFans.length > 0 ? allFans : serverFans;
+  for (let i = 0; i < fanList.length; i++) {
+    const f = fanList[i];
+    const nameEl = document.getElementById(`fname-${i}`);
+    const ctrlEl = document.getElementById(`fctrl-${i}`);
     if (nameEl || ctrlEl) {
       await api('PATCH', `/settings/fans/${f.fan_id}`, {
         friendly_name: nameEl ? nameEl.value : undefined,
@@ -1041,20 +883,21 @@ async function saveSettings() {
       });
     }
   }
-
-  // Save global settings (single call)
-  // alertEnabled = document.getElementById('alertToggle').checked;
-  await api('PATCH', '/settings/global', { 
+  const langSel = document.getElementById('langSelect');
+  const selectedLang = langSel ? langSel.value : activeLang;
+  await api('PATCH', '/settings/global', {
     temp_unit: unit,
     unmonitored_disks: unmonitored,
     unmonitored_fans: unmonitored_fans,
+    language: selectedLang,
   });
+  if (selectedLang !== activeLang) setLanguage(selectedLang);
   settingsData = await api('GET', '/settings/');
   if (settingsData) {
     if (settingsData.all_disks && settingsData.all_disks.length > 0) allDisks = settingsData.all_disks;
     if (settingsData.all_fans && settingsData.all_fans.length > 0) allFans = settingsData.all_fans;
   }
-  await forceRefresh()
+  await forceRefresh();
   showView('dashboard', document.getElementById('navDash'));
 }
 
@@ -1067,13 +910,11 @@ async function discardSettings() {
   showView('dashboard', document.getElementById('navDash'));
 }
 
-// ── Dismiss banner ──────────────────────────────────────────────────────────────────
 function dismissBanner() {
   document.getElementById('onboardBanner').style.display = 'none';
   localStorage.setItem('fd_banner_dismissed', '1');
 }
 
-// ── Reset config ──────────────────────────────────────────────────────────────────
 async function resetConfig() {
   if (!confirm(T.resetConfigConfirm)) return;
   toggleUserMenu(false);

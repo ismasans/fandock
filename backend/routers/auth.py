@@ -16,7 +16,7 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 SECRET_KEY = "CHANGE_ME_IN_PRODUCTION"  # override via env var FANDOCK_SECRET in main.py
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 8  # 8 hours
+ACCESS_TOKEN_EXPIRE_MINUTES = 30  # time until token expires and login session ends in minutes
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/token")
 

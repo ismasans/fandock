@@ -37,18 +37,14 @@
       <h1 id="wizTitle"></h1>
       <p id="wizSubtitle"></p>
     </div>
-
-    <!-- Step 1: Change password -->
     <div id="wizardStep1">
       <p id="wizStep1Desc" style="font-size:13px;color:var(--color-text-secondary);margin-bottom:1rem;"></p>
-      <div class="field" id="wizCurrentPwdField"><label id="labelWizCurrentPwd"></label><input type="password" id="wizPwdCurrent" /></div>
+      <div class="field"><label id="labelWizCurrentPwd"></label><input type="password" id="wizPwdCurrent" /></div>
       <div class="field"><label id="labelWizNewPwd"></label><input type="password" id="wizPwdNew" /></div>
       <div class="field"><label id="labelWizConfirmPwd"></label><input type="password" id="wizPwdConfirm" /></div>
       <div class="login-err" id="wizPwdErr"></div>
       <button class="btn btn-primary" id="btnWizSetPwd" style="width:100%;padding:9px;margin-top:.25rem;" onclick="wizardSetPassword()"></button>
     </div>
-
-    <!-- Step 2: Hardware scan -->
     <div id="wizardStep2" class="hidden">
       <p id="wizStep2Desc" style="font-size:13px;color:var(--color-text-secondary);margin-bottom:1rem;"></p>
       <p class="section-label" id="wizDisksLabel" style="margin-top:1rem;"></p>
@@ -141,9 +137,7 @@
           <span id="legendCurrentOp"></span>
         </span>
       </div>
-      <div class="curve-wrap">
-        <canvas id="curveCanvas"></canvas>
-      </div>
+      <div class="curve-wrap"><canvas id="curveCanvas"></canvas></div>
       <div id="warnBar" class="warn-bar">
         <i class="ti ti-alert-triangle" style="font-size:13px;margin-right:6px;vertical-align:-1px;"></i>
         <span id="warnBarMsg"></span>
@@ -155,18 +149,11 @@
         <div id="pointRows"></div>
       </div>
       <div style="display:flex;gap:8px;margin-top:1rem;justify-content:flex-end;">
-        <button class="btn" onclick="addPoint()">
-          <i class="ti ti-plus" style="font-size:13px;margin-right:4px;vertical-align:-1px;"></i><span id="btnAddPoint"></span>
-        </button>
-        <button class="btn" onclick="discardCurve()">
-          <i class="ti ti-refresh" style="font-size:13px;margin-right:4px;vertical-align:-1px;"></i><span id="btnDiscardCurve"></span>
-        </button>
-        <button class="btn btn-primary" onclick="saveCurve()">
-          <i class="ti ti-device-floppy" style="font-size:13px;margin-right:4px;vertical-align:-1px;"></i><span id="btnSaveCurve"></span>
-        </button>
+        <button class="btn" onclick="addPoint()"><i class="ti ti-plus" style="font-size:13px;margin-right:4px;vertical-align:-1px;"></i><span id="btnAddPoint"></span></button>
+        <button class="btn" onclick="discardCurve()"><i class="ti ti-refresh" style="font-size:13px;margin-right:4px;vertical-align:-1px;"></i><span id="btnDiscardCurve"></span></button>
+        <button class="btn btn-primary" onclick="saveCurve()"><i class="ti ti-device-floppy" style="font-size:13px;margin-right:4px;vertical-align:-1px;"></i><span id="btnSaveCurve"></span></button>
       </div>
       <p class="hint" id="curveHintText"></p>
-      
       <div style="margin-top:1.25rem;">
         <p class="section-label" id="linkedDisksLabel"></p>
         <div id="curveLinkedDisks"></div>
@@ -182,9 +169,7 @@
         <span id="settingsHwTitle"></span> <span class="scan-badge" id="scanBadge"></span>
       </h3>
       <p id="settingsHwDesc" style="font-size:13px;color:var(--color-text-secondary);margin-bottom:1rem;"></p>
-      <button class="btn" onclick="rescanHardware()">
-        <i class="ti ti-refresh" style="font-size:13px;margin-right:4px;vertical-align:-1px;"></i><span id="btnRescan"></span>
-      </button>
+      <button class="btn" onclick="rescanHardware()"><i class="ti ti-refresh" style="font-size:13px;margin-right:4px;vertical-align:-1px;"></i><span id="btnRescan"></span></button>
       <div id="fanDiagnostic" class="hidden" style="margin-top:1rem;padding:.875rem 1rem;border-radius:var(--border-radius-md);font-size:13px;"></div>
     </div>
 
@@ -235,21 +220,24 @@
           <button class="unit-btn" id="btnF" onclick="setUnit('F')">°F</button>
         </div>
       </div>
+      <div class="toggle-row">
+        <div><div class="toggle-label" id="prefLangLabel"></div><div class="toggle-sub" id="prefLangDesc"></div></div>
+        <select id="langSelect" style="font-size:13px;padding:4px 8px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);">
+          <option value="en">English</option>
+          <option value="es">Español</option>
+        </select>
+      </div>
     </div>
 
     <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:.5rem;">
       <button class="btn" id="btnDiscardSettings" onclick="discardSettings()"></button>
-      <button class="btn btn-primary" onclick="saveSettings()">
-        <i class="ti ti-device-floppy" style="font-size:13px;margin-right:4px;vertical-align:-1px;"></i><span id="btnSaveSettings"></span>
-      </button>
+      <button class="btn btn-primary" onclick="saveSettings()"><i class="ti ti-device-floppy" style="font-size:13px;margin-right:4px;vertical-align:-1px;"></i><span id="btnSaveSettings"></span></button>
     </div>
   </div>
 
   <!-- FOOTER -->
   <footer style="margin-top:2rem;padding-top:1rem;border-top:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-    <span style="font-size:11px;color:var(--color-text-tertiary);">
-      FanDock <span id="footerVersion"></span> — <span id="footerTagline"></span>
-    </span>
+    <span style="font-size:11px;color:var(--color-text-tertiary);">FanDock <span id="footerVersion"></span> — <span id="footerTagline"></span></span>
     <div style="display:flex;gap:12px;">
       <a href="https://github.com/ismasans/fandock" target="_blank" style="font-size:11px;color:var(--color-text-tertiary);text-decoration:none;display:flex;align-items:center;gap:4px;">
         <i class="ti ti-brand-github" style="font-size:14px;"></i><span id="footerGithub"></span>
@@ -260,8 +248,8 @@
     </div>
   </footer>
 
-</div><!-- /container -->
-</div><!-- /mainView -->
+</div>
+</div>
 
 <!-- CHANGE PASSWORD MODAL -->
 <div class="modal-bg hidden" id="pwdModal">
@@ -280,105 +268,8 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-dragdata@2.2.5/dist/chartjs-plugin-dragdata.min.js"></script>
+<script src="/static/js/i18n/en.js"></script>
+<script src="/static/js/i18n/es.js"></script>
 <script src="/static/js/app.js"></script>
-
-<!-- Apply i18n strings to DOM elements -->
-<script>
-(function applyI18n() {
-  // Login
-  document.getElementById('loginSubtitle').textContent = T.loginAppDesc;
-  document.getElementById('loginErr').textContent = T.loginError;
-  document.getElementById('labelUser').textContent = T.usernameLabel;
-  document.getElementById('labelPass').textContent = T.passwordLabel;
-  document.getElementById('hintDefaultCreds').innerHTML = T.defaultCreds + ' <strong>admin</strong> / <strong>fandock</strong>';
-  document.getElementById('hintDefaultCredsNote').textContent = T.defaultCredsNote;
-  document.getElementById('hintForgotPwd').textContent = T.forgotPassword;
-  document.getElementById('btnSignIn').textContent = T.signIn;
-  // Wizard
-  document.getElementById('wizTitle').textContent = T.welcomeTitle;
-  document.getElementById('wizSubtitle').textContent = T.welcomeSubtitle;
-  document.getElementById('wizStep1Desc').textContent = T.wizStep1Desc;
-  document.getElementById('labelWizCurrentPwd').textContent = T.currentPassword;
-  document.getElementById('labelWizNewPwd').textContent = T.newPassword;
-  document.getElementById('labelWizConfirmPwd').textContent = T.confirmPassword;
-  document.getElementById('btnWizSetPwd').textContent = T.setPasswordContinue;
-  document.getElementById('wizStep2Desc').textContent = T.wizStep2Desc;
-  document.getElementById('wizDisksLabel').textContent = T.disks;
-  document.getElementById('wizFansLabel').textContent = T.fans;
-  document.getElementById('wizCurvesNote').textContent = T.fanCurvesDefault;
-  document.getElementById('btnWizFinish').textContent = T.finishSetup;
-  // Onboarding banner
-  document.getElementById('bannerImportant').textContent = T.onboardImportant;
-  document.getElementById('bannerMsg').textContent = T.onboardMsg;
-  document.getElementById('btnDismiss').textContent = T.dismiss;
-  // Nav
-  document.getElementById('navLabelDash').textContent = T.dashboard;
-  document.getElementById('navLabelCurves').textContent = T.curves;
-  document.getElementById('navLabelSettings').textContent = T.settings;
-  // User menu
-  document.getElementById('menuChangePwd').textContent = T.changePassword;
-  document.getElementById('menuResetConfig').textContent = T.resetConfiguration;
-  document.getElementById('menuLogout').textContent = T.logout;
-  // Dashboard
-  document.getElementById('labelDiskTemps').textContent = T.diskTemps;
-  document.getElementById('legendNormal').textContent = T.normal;
-  document.getElementById('legendWarm').textContent = T.warm;
-  document.getElementById('legendHot').textContent = T.hot;
-  document.getElementById('legendCritical').textContent = T.critical;
-  document.getElementById('legendHoverThreshold').textContent = T.hoverThreshold;
-  document.getElementById('labelFanStatus').textContent = T.fanStatus;
-  // Curves
-  document.getElementById('curvesEditorTitle').textContent = T.fanCurveEditor;
-  document.getElementById('nowLabel').textContent = T.now;
-  document.getElementById('legendFanCurve').textContent = T.fanCurve;
-  document.getElementById('legendCurrentOp').textContent = T.currentOp;
-  document.getElementById('warnBarMsg').textContent = 'Warning: minimum fan speed below 20% may reduce airflow and shorten drive lifespan.';
-  document.getElementById('colTemperature').textContent = T.temperature;
-  document.getElementById('colFanSpeed').textContent = T.fanSpeed;
-  document.getElementById('btnAddPoint').textContent = T.addPoint;
-  document.getElementById('btnDiscardCurve').textContent = T.discardChanges;
-  document.getElementById('btnSaveCurve').textContent = T.saveCurve;
-  document.getElementById('curveHintText').textContent = T.curveHint;
-  document.getElementById('linkedDisksLabel').textContent = T.linkedDisksLabel;
-  // Settings
-  document.getElementById('settingsHwTitle').textContent = T.hardwareDetection;
-  document.getElementById('scanBadge').textContent = T.scanned;
-  document.getElementById('settingsHwDesc').textContent = T.hardwareDesc;
-  document.getElementById('btnRescan').textContent = T.rescan;
-  document.getElementById('settingsDisksTitle').textContent = T.disks;
-  document.getElementById('thDevice').textContent = T.device;
-  document.getElementById('thModel').textContent = T.model;
-  document.getElementById('thSerial').textContent = T.serial;
-  document.getElementById('thType').textContent = T.type;
-  document.getElementById('thFriendlyName').textContent = T.friendlyName;
-  document.getElementById('thMonitor').textContent = T.monitor;
-  document.getElementById('settingsFansTitle').textContent = T.fans;
-  document.getElementById('settingsFansDesc').textContent = T.fansDesc;
-  document.getElementById('thPwmChannel').textContent = T.pwmChannel;
-  document.getElementById('thFanFriendlyName').textContent = T.friendlyName;
-  document.getElementById('thCurrentRpm').textContent = T.currentRpm;
-  document.getElementById('thFanMonitor').textContent = T.monitor;
-  document.getElementById('thControl').textContent = T.control;
-  document.getElementById('settingsPrefsTitle').textContent = T.preferences;
-  document.getElementById('prefTempUnitsLabel').textContent = T.tempUnits;
-  document.getElementById('prefTempUnitsDesc').textContent = T.chooseScale;
-  document.getElementById('btnDiscardSettings').textContent = T.discardChanges;
-  document.getElementById('btnSaveSettings').textContent = T.saveSettings;
-  // Footer
-  document.getElementById('footerTagline').textContent = T.openSourceNas;
-  document.getElementById('footerGithub').textContent = T.githubLink;
-  document.getElementById('footerReportIssue').textContent = T.reportIssue;
-  // Modal
-  document.getElementById('modalChangePwdTitle').textContent = T.changePassword;
-  document.getElementById('modalLabelCurrentPwd').textContent = T.currentPassword;
-  document.getElementById('modalLabelNewPwd').textContent = T.newPassword;
-  document.getElementById('modalLabelConfirmPwd').textContent = T.confirmPassword;
-  document.getElementById('modalBtnCancel').textContent = T.cancel;
-  document.getElementById('modalBtnUpdatePwd').textContent = T.updatePassword;
-  // warn bar string inline (sin key previa, se añade en T)
-  document.getElementById('warnBarMsg').textContent = T.warnBelow20;
-})();
-</script>
-
 </body>
 </html>
