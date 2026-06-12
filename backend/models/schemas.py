@@ -73,7 +73,7 @@ class AppConfig(BaseModel):
     fans: list[FanConfig] = Field(default_factory=list)
     disk_friendly_names: dict[str, str] = Field(default_factory=dict)
     temp_unit: Literal["C", "F"] = "C"
-    language: str = "en"                          # ← nuevo campo
+    language: Optional[str] = None
     monitor_enabled: bool = True
     control_enabled: bool = True
     poll_interval_seconds: int = Field(default=10, ge=5, le=300)

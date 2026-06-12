@@ -304,7 +304,7 @@ async function showApp() {
   if (settingsData) {
     unit = settingsData.temp_unit || 'C';
     // Server preference overrides browser detection
-    if (settingsData.language && TRANSLATIONS[settingsData.language]) {
+    if (settingsData.language && TRANSLATIONS[settingsData.language] && settingsData.language !== activeLang) {
       activeLang = settingsData.language;
       applyLanguage(activeLang);
     }
