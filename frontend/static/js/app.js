@@ -4,7 +4,7 @@ let activeLang = 'en';
 
 function _detectBrowserLang() {
   const lang = (navigator.language || '').split('-')[0].toLowerCase();
-  return ['en', 'es', 'fr', 'de'].includes(lang) ? lang : 'en';
+  return availableLangs.includes(lang) ? lang : 'en';
 }
 
 async function loadLanguage(langCode) {
@@ -34,6 +34,7 @@ let allFans = [];
 let serverFans = [];
 let settingsData = null;
 let pollTimer = null;
+let availableLangs = ['en'];
 
 const DISK_THRESHOLDS = {
   HDD:  { warm: 40, hot: 45, critical: 55 },
@@ -43,6 +44,11 @@ const DISK_THRESHOLDS = {
 
 // ── Bootstrap: load language then show login or app ───────────────────────────
 (async () => {
+  try {
+    const res = await fetch('/api/settings/languages');
+    const data = await res.json();
+    availableLangs = data.languages;
+  } catch { availableLangs = ['en']; }
   const browserLang = _detectBrowserLang();
   await loadLanguage(browserLang);
 
@@ -156,7 +162,17 @@ function applyI18n() {
   s('modalBtnCancel', T.cancel);
   s('modalBtnUpdatePwd', T.updatePassword);
   const langSel = document.getElementById('langSelect');
-  if (langSel) langSel.value = activeLang;
+  if (langSel) {
+    if (langSel.options.length === 0) {
+      availableLangs.forEach(code => {
+        const opt = document.createElement('option');
+        opt.value = code;
+        opt.textContent = code.toUpperCase();
+        langSel.appendChild(opt);
+      });
+    }
+    langSel.value = activeLang;
+  }
 }
 
 // ── API helpers ───────────────────────────────────────────────────────────────

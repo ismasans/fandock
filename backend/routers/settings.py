@@ -123,3 +123,13 @@ async def update_global_settings(payload: GlobalSettingsPayload, _user: str = De
 @router.get("/fan-diagnostic")
 async def fan_diagnostic(_user: str = Depends(get_current_user)):
     return diagnose_fan_hardware()
+
+@router.get("/languages")
+async def available_languages():
+    import os
+    i18n_path = os.path.join(os.path.dirname(__file__), '../../frontend/static/js/i18n')
+    languages = []
+    for f in sorted(os.listdir(i18n_path)):
+        if f.endswith('.json'):
+            languages.append(f.replace('.json', ''))
+    return {"languages": languages}
