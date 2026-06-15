@@ -143,9 +143,7 @@
         <span id="warnBarMsg"></span>
       </div>
       <div style="margin-top:1rem;">
-        <div class="point-list-header">
-          <span id="colTemperature"></span><span id="colFanSpeed"></span><span></span>
-        </div>
+        <div class="point-list-header"><span id="colTemperature"></span><span id="colFanSpeed"></span><span></span></div>
         <div id="pointRows"></div>
       </div>
       <div style="display:flex;gap:8px;margin-top:1rem;justify-content:flex-end;">
@@ -225,6 +223,8 @@
         <select id="langSelect" style="font-size:13px;padding:4px 8px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);">
           <option value="en">English</option>
           <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="de">Deutsch</option>
         </select>
       </div>
     </div>
@@ -268,8 +268,6 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-dragdata@2.2.5/dist/chartjs-plugin-dragdata.min.js"></script>
-<script src="/static/js/i18n/en.js"></script>
-<script src="/static/js/i18n/es.js"></script>
 <script src="/static/js/app.js"></script>
 </body>
 </html>

@@ -1,20 +1,31 @@
-// ── Language selection ────────────────────────────────────────────────────────
-let T = TRANSLATIONS.en;
+// ── Language loading ──────────────────────────────────────────────────────────
+let T = {};
+let activeLang = 'en';
 
 function _detectBrowserLang() {
   const lang = (navigator.language || '').split('-')[0].toLowerCase();
-  return TRANSLATIONS[lang] ? lang : 'en';
+  return ['en', 'es', 'fr', 'de'].includes(lang) ? lang : 'en';
 }
 
-function applyLanguage(langCode) {
-  T = TRANSLATIONS[langCode] || TRANSLATIONS.en;
+async function loadLanguage(langCode) {
+  try {
+    const res = await fetch(`/static/js/i18n/${langCode}.json`);
+    if (!res.ok) throw new Error('not found');
+    T = await res.json();
+    activeLang = langCode;
+  } catch {
+    if (langCode !== 'en') {
+      const res = await fetch('/static/js/i18n/en.json');
+      T = await res.json();
+      activeLang = 'en';
+    }
+  }
   applyI18n();
 }
 
-// ── State ────────────────────────────────────────────────────────────────────
+// ── State ─────────────────────────────────────────────────────────────────────
 let token = localStorage.getItem('fd_token') || null;
 let unit = 'C';
-let activeLang = _detectBrowserLang();
 let chart = null;
 let curves = {};
 let serverDisks = [];
@@ -30,14 +41,25 @@ const DISK_THRESHOLDS = {
   NVMe: { warm: 55, hot: 65, critical: 75 },
 };
 
-// Apply browser language immediately so login page is already translated
-applyLanguage(activeLang);
+// ── Bootstrap: load language then show login or app ───────────────────────────
+(async () => {
+  const browserLang = _detectBrowserLang();
+  await loadLanguage(browserLang);
 
-document.addEventListener('DOMContentLoaded', () => {
-  if (!token) {
-    fetch('/api/settings/', {method:'GET'}).then(r => {
-      if (r.status === 401) document.getElementById('loginView').classList.remove('hidden');
-    });
+  if (token) {
+    const data = await api('GET', '/settings/');
+    if (!data || data.first_run) {
+      token = null;
+      localStorage.removeItem('fd_token');
+      document.getElementById('loginView').classList.remove('hidden');
+      return;
+    }
+    // Apply saved language preference if different from browser
+    if (data.language && data.language !== activeLang) {
+      await loadLanguage(data.language);
+    }
+    showApp(data);
+  } else {
     document.getElementById('loginView').classList.remove('hidden');
     fetch('/api/auth/first-run').then(r => r.json()).then(d => {
       if (!d.first_run) document.getElementById('defaultCredsHint').style.display = 'none';
@@ -45,13 +67,12 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('defaultCredsHint').style.display = 'none';
     });
   }
-});
+})();
 
 // ── i18n DOM application ──────────────────────────────────────────────────────
 function applyI18n() {
   const s = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
   const h = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
-  // Login
   s('loginSubtitle', T.loginAppDesc);
   s('loginErr', T.loginError);
   s('labelUser', T.usernameLabel);
@@ -60,7 +81,6 @@ function applyI18n() {
   s('hintDefaultCredsNote', T.defaultCredsNote);
   s('hintForgotPwd', T.forgotPassword);
   s('btnSignIn', T.signIn);
-  // Wizard
   s('wizTitle', T.welcomeTitle);
   s('wizSubtitle', T.welcomeSubtitle);
   s('wizStep1Desc', T.wizStep1Desc);
@@ -73,19 +93,15 @@ function applyI18n() {
   s('wizFansLabel', T.fans);
   s('wizCurvesNote', T.fanCurvesDefault);
   s('btnWizFinish', T.finishSetup);
-  // Banner
   s('bannerImportant', T.onboardImportant);
   s('bannerMsg', T.onboardMsg);
   s('btnDismiss', T.dismiss);
-  // Nav
   s('navLabelDash', T.dashboard);
   s('navLabelCurves', T.curves);
   s('navLabelSettings', T.settings);
-  // User menu
   s('menuChangePwd', T.changePassword);
   s('menuResetConfig', T.resetConfiguration);
   s('menuLogout', T.logout);
-  // Dashboard
   s('labelDiskTemps', T.diskTemps);
   s('legendNormal', T.normal);
   s('legendWarm', T.warm);
@@ -93,7 +109,6 @@ function applyI18n() {
   s('legendCritical', T.critical);
   s('legendHoverThreshold', T.hoverThreshold);
   s('labelFanStatus', T.fanStatus);
-  // Curves
   s('curvesEditorTitle', T.fanCurveEditor);
   s('nowLabel', T.now);
   s('legendFanCurve', T.fanCurve);
@@ -106,7 +121,6 @@ function applyI18n() {
   s('btnSaveCurve', T.saveCurve);
   s('curveHintText', T.curveHint);
   s('linkedDisksLabel', T.linkedDisksLabel);
-  // Settings
   s('settingsHwTitle', T.hardwareDetection);
   s('scanBadge', T.scanned);
   s('settingsHwDesc', T.hardwareDesc);
@@ -132,18 +146,15 @@ function applyI18n() {
   s('prefLangDesc', T.languageDesc);
   s('btnDiscardSettings', T.discardChanges);
   s('btnSaveSettings', T.saveSettings);
-  // Footer
   s('footerTagline', T.openSourceNas);
   s('footerGithub', T.githubLink);
   s('footerReportIssue', T.reportIssue);
-  // Modal
   s('modalChangePwdTitle', T.changePassword);
   s('modalLabelCurrentPwd', T.currentPassword);
   s('modalLabelNewPwd', T.newPassword);
   s('modalLabelConfirmPwd', T.confirmPassword);
   s('modalBtnCancel', T.cancel);
   s('modalBtnUpdatePwd', T.updatePassword);
-  // Language selector
   const langSel = document.getElementById('langSelect');
   if (langSel) langSel.value = activeLang;
 }
@@ -161,7 +172,7 @@ async function api(method, path, body) {
   return res.json();
 }
 
-// ── Auth ─────────────────────────────────────────────────────────────────────
+// ── Auth ──────────────────────────────────────────────────────────────────────
 async function doLogin() {
   const user = document.getElementById('loginUser').value.trim();
   const pass = document.getElementById('loginPass').value;
@@ -292,7 +303,7 @@ function openChangePwd() {
 function closePwdModal() { document.getElementById('pwdModal').classList.add('hidden'); }
 
 // ── App bootstrap ─────────────────────────────────────────────────────────────
-async function showApp() {
+async function showApp(preloadedSettings) {
   const bannerDismissed = localStorage.getItem('fd_banner_dismissed');
   if (bannerDismissed) { const b = document.getElementById('onboardBanner'); if (b) b.style.display = 'none'; }
   document.getElementById('loginView').classList.add('hidden');
@@ -300,13 +311,11 @@ async function showApp() {
   document.getElementById('mainView').classList.remove('hidden');
   const hint = document.getElementById('defaultCredsHint');
   if (hint) hint.style.display = 'none';
-  settingsData = await api('GET', '/settings/');
+  settingsData = preloadedSettings || await api('GET', '/settings/');
   if (settingsData) {
     unit = settingsData.temp_unit || 'C';
-    // Server preference overrides browser detection
-    if (settingsData.language && TRANSLATIONS[settingsData.language] && settingsData.language !== activeLang) {
-      activeLang = settingsData.language;
-      applyLanguage(activeLang);
+    if (settingsData.language && settingsData.language !== activeLang) {
+      await loadLanguage(settingsData.language);
     }
     if (settingsData.all_disks && settingsData.all_disks.length > 0) allDisks = settingsData.all_disks;
     if (settingsData.all_fans && settingsData.all_fans.length > 0) allFans = settingsData.all_fans;
@@ -320,17 +329,6 @@ async function showApp() {
     }
   });
   startPolling();
-}
-
-if (token) {
-  api('GET', '/settings/').then(data => {
-    if (!data || data.first_run) {
-      token = null; localStorage.removeItem('fd_token');
-      document.getElementById('loginView').classList.remove('hidden');
-      return;
-    }
-    showApp();
-  });
 }
 
 // ── Navigation ────────────────────────────────────────────────────────────────
@@ -425,7 +423,7 @@ function renderDiskGrid() {
     card.title = threshTooltip(d);
     card.innerHTML = `
       <div class="disk-name">${name}</div>
-      <div class="disk-temp ${threshClass(d)}" id="t-${d.device.replace('/dev/','')}">${tempStr}<span>${unitLabel()}</span></div>
+      <div class="disk-temp ${threshClass(d)}">${tempStr}<span>${unitLabel()}</span></div>
       <div class="disk-model">${d.device}</div>
       <span class="disk-type-badge">${d.type}</span>`;
     grid.appendChild(card);
@@ -533,8 +531,7 @@ function buildChart() {
   const maxT = temps.length > 0 ? Math.min(unit === 'F' ? 212 : 100, Math.max(...temps) + padding) : (unit === 'F' ? 185 : 85);
   const chartData = pts.map(p => ({ x: toDisplay(p.t), y: p.p }));
   const tempC = getMaxTempC();
-  const opPct = interpolate(pts, tempC);
-  const opData = [{ x: minT, y: opPct }, { x: maxT, y: opPct }];
+  const opData = [{ x: minT, y: interpolate(pts, tempC) }, { x: maxT, y: interpolate(pts, tempC) }];
   if (chart) { chart.destroy(); chart = null; }
   const ctx = document.getElementById('curveCanvas').getContext('2d');
   chart = new Chart(ctx, {
@@ -544,41 +541,25 @@ function buildChart() {
         {
           label: T.fanCurve,
           data: chartData,
-          borderColor: '#378ADD',
-          backgroundColor: 'rgba(55,138,221,0.08)',
-          borderWidth: 2.5,
-          pointRadius: 6,
-          pointHoverRadius: 8,
-          pointBackgroundColor: '#378ADD',
-          tension: 0,
-          fill: true,
-          dragData: {
-            round: 1, showTooltip: true,
-            onDragStart: (e, datasetIndex, index) => {
-              if (index === (curves[activeFan()] || []).length - 1) return false;
-            },
+          borderColor: '#378ADD', backgroundColor: 'rgba(55,138,221,0.08)',
+          borderWidth: 2.5, pointRadius: 6, pointHoverRadius: 8, pointBackgroundColor: '#378ADD',
+          tension: 0, fill: true,
+          dragData: { round: 1, showTooltip: true,
+            onDragStart: (e, di, index) => { if (index === (curves[activeFan()] || []).length - 1) return false; },
           },
         },
         {
-          label: T.currentOp,
-          data: opData,
-          borderColor: '#BA7517',
-          borderWidth: 2,
-          borderDash: [4, 3],
-          pointRadius: 0,
-          dragData: false,
+          label: T.currentOp, data: opData,
+          borderColor: '#BA7517', borderWidth: 2, borderDash: [4, 3], pointRadius: 0, dragData: false,
         },
       ],
     },
-    plugins: [],
     options: {
-      responsive: true,
-      maintainAspectRatio: false,
+      responsive: true, maintainAspectRatio: false,
       plugins: {
         legend: { display: false },
         dragData: {
-          round: 1, showTooltip: true,
-          onDragStart: () => {},
+          round: 1, showTooltip: true, onDragStart: () => {},
           onDrag: (e, di, i, val) => {
             const fan = activeFan();
             if (di === 0 && curves[fan]) {
@@ -591,8 +572,7 @@ function buildChart() {
             updateBadge();
           },
           onDragEnd: () => {
-            const fan = activeFan();
-            const pts = curves[fan] || [];
+            const fan = activeFan(), pts = curves[fan] || [];
             if (pts.length > 0) pts[pts.length - 1].p = 100;
             sortCurve(fan); buildChart(); renderPointRows(false);
           },
@@ -605,39 +585,30 @@ function buildChart() {
       animation: { duration: 200 },
     },
   });
-  updateBadge();
-  checkWarnBar();
+  updateBadge(); checkWarnBar();
 }
 
 function renderPointRows(doRebuild) {
-  const fan = activeFan();
-  sortCurve(fan);
-  const container = document.getElementById('pointRows');
-  container.innerHTML = '';
+  const fan = activeFan(); sortCurve(fan);
+  const container = document.getElementById('pointRows'); container.innerHTML = '';
   (curves[fan] || []).forEach((pt, i) => {
     const row = document.createElement('div'); row.className = 'point-row';
     const tIn = document.createElement('input'); tIn.className = 'point-input'; tIn.type = 'number'; tIn.min = 15; tIn.max = 85; tIn.value = toDisplay(pt.t);
     tIn.onchange = () => { curves[fan][i].t = Math.round(fromDisplay(parseFloat(tIn.value) || pt.t)); sortCurve(fan); refresh(); };
     const pIn = document.createElement('input'); pIn.className = 'point-input'; pIn.type = 'number'; pIn.min = 0; pIn.max = 100; pIn.value = pt.p;
-    const isLastPoint = i === (curves[fan] || []).length - 1;
-    if (isLastPoint) {
-      pIn.disabled = true; pIn.style.opacity = '0.5'; pIn.title = T.lastPointFixed;
-    } else {
+    const isLast = i === (curves[fan] || []).length - 1;
+    if (isLast) { pIn.disabled = true; pIn.style.opacity = '0.5'; pIn.title = T.lastPointFixed; }
+    else {
       pIn.onchange = () => {
-        const pts = curves[fan];
-        const prevMax = i > 0 ? pts[i-1].p : 0;
-        const nextMin = i < pts.length - 2 ? pts[i+1].p : 100;
-        const newVal = Math.max(prevMax, Math.min(nextMin, parseInt(pIn.value) || 0));
-        curves[fan][i].p = newVal; pIn.value = newVal; refresh();
+        const pts = curves[fan], prevMax = i > 0 ? pts[i-1].p : 0, nextMin = i < pts.length - 2 ? pts[i+1].p : 100;
+        const v = Math.max(prevMax, Math.min(nextMin, parseInt(pIn.value) || 0));
+        curves[fan][i].p = v; pIn.value = v; refresh();
       };
     }
     const del = document.createElement('button'); del.className = 'del-btn'; del.title = T.removePoint;
     del.innerHTML = '<i class="ti ti-trash"></i>';
-    if (i === 0 || isLastPoint) {
-      del.disabled = true; del.style.opacity = '0.3'; del.style.cursor = 'not-allowed';
-    } else {
-      del.onclick = () => { if ((curves[fan] || []).length > 2) { curves[fan].splice(i, 1); refresh(); } };
-    }
+    if (i === 0 || isLast) { del.disabled = true; del.style.opacity = '0.3'; del.style.cursor = 'not-allowed'; }
+    else { del.onclick = () => { if ((curves[fan] || []).length > 2) { curves[fan].splice(i, 1); refresh(); } }; }
     row.append(tIn, pIn, del); container.appendChild(row);
   });
   if (doRebuild) buildChart();
@@ -652,21 +623,15 @@ function checkWarnBar() {
 }
 
 function renderLinkedDisks() {
-  const fan = activeFan();
-  const container = document.getElementById('curveLinkedDisks');
-  if (!container) return;
-  container.innerHTML = '';
+  const fan = activeFan(); const container = document.getElementById('curveLinkedDisks');
+  if (!container) return; container.innerHTML = '';
   const fanCfg = settingsData && settingsData.fans ? settingsData.fans.find(f => f.fan_id === fan) : null;
   const linked = fanCfg ? (fanCfg.linked_disks || []) : [];
   const diskList = allDisks.length > 0 ? allDisks : serverDisks;
-  if (diskList.length === 0) {
-    container.innerHTML = `<p style="font-size:12px;color:var(--color-text-tertiary);">${T.noDisksDetected}</p>`;
-    return;
-  }
+  if (diskList.length === 0) { container.innerHTML = `<p style="font-size:12px;color:var(--color-text-tertiary);">${T.noDisksDetected}</p>`; return; }
   diskList.forEach((d, i) => {
     const name = (settingsData && settingsData.disk_friendly_names && (settingsData.disk_friendly_names[d.serial] || settingsData.disk_friendly_names[d.device])) || d.device;
-    const row = document.createElement('div');
-    row.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:6px;';
+    const row = document.createElement('div'); row.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:6px;';
     row.innerHTML = `
       <label class="toggle"><input type="checkbox" ${linked.includes(d.serial) ? 'checked' : ''} id="linked-${i}" onchange="onLinkedDiskChange()"><span class="toggle-slider"></span></label>
       <span style="font-size:13px;color:var(--color-text-primary);">${name}</span>
@@ -677,9 +642,7 @@ function renderLinkedDisks() {
 }
 
 async function onLinkedDiskChange() {
-  const fan = activeFan();
-  const diskList = allDisks.length > 0 ? allDisks : serverDisks;
-  const linked = [];
+  const fan = activeFan(), diskList = allDisks.length > 0 ? allDisks : serverDisks, linked = [];
   diskList.forEach((d, i) => { const el = document.getElementById(`linked-${i}`); if (el && el.checked) linked.push(d.serial); });
   await api('PATCH', `/settings/fans/${fan}`, { linked_disks: linked });
   if (settingsData && settingsData.fans) { const fc = settingsData.fans.find(f => f.fan_id === fan); if (fc) fc.linked_disks = linked; }
@@ -689,25 +652,18 @@ async function onLinkedDiskChange() {
 function addPoint() {
   const fan = activeFan(), pts = curves[fan] || [], s = [...pts].sort((a, b) => a.t - b.t);
   let bestGap = 0, bestT = s[0].t + 5;
-  for (let i = 0; i < s.length - 1; i++) {
-    const gap = s[i + 1].t - s[i].t;
-    if (gap > bestGap) { bestGap = gap; bestT = Math.round((s[i].t + s[i + 1].t) / 2); }
-  }
-  curves[fan].push({ t: bestT, p: Math.round(interpolate(pts, bestT)) });
-  refresh();
+  for (let i = 0; i < s.length - 1; i++) { const gap = s[i+1].t - s[i].t; if (gap > bestGap) { bestGap = gap; bestT = Math.round((s[i].t + s[i+1].t) / 2); } }
+  curves[fan].push({ t: bestT, p: Math.round(interpolate(pts, bestT)) }); refresh();
 }
 
 async function saveCurve() {
-  const fan = activeFan();
-  const minP = Math.min(...(curves[fan] || []).map(p => p.p));
+  const fan = activeFan(), minP = Math.min(...(curves[fan] || []).map(p => p.p));
   if (minP < 20 && !confirm(T.curveBelow20)) return;
-  const points = (curves[fan] || []).map(p => ({ temp_c: p.t, pwm_pct: p.p }));
-  const data = await api('PUT', `/fans/${fan}/curve`, { fan_id: fan, points });
+  const data = await api('PUT', `/fans/${fan}/curve`, { fan_id: fan, points: (curves[fan] || []).map(p => ({ temp_c: p.t, pwm_pct: p.p })) });
   if (data) { await loadCurve(fan); alert(T.curveSaved); }
 }
 
 async function discardCurve() { const fan = activeFan(); delete curves[fan]; await loadCurve(fan); }
-
 document.getElementById('fanSelect').onchange = () => { loadCurve(activeFan()); };
 
 // ── Settings ──────────────────────────────────────────────────────────────────
@@ -721,14 +677,12 @@ async function loadSettings() {
   if (langSel) langSel.value = settingsData.language || activeLang;
   if (settingsData.all_disks && settingsData.all_disks.length > 0) allDisks = settingsData.all_disks;
   if (settingsData.all_fans && settingsData.all_fans.length > 0) allFans = settingsData.all_fans;
-  buildDiskCfg(settingsData);
-  buildFanCfg(settingsData);
+  buildDiskCfg(settingsData); buildFanCfg(settingsData);
 }
 
 function buildDiskCfg(cfg) {
   const tb = document.getElementById('diskCfgBody'); tb.innerHTML = '';
-  const diskList = allDisks.length > 0 ? allDisks : serverDisks;
-  diskList.forEach((d, i) => {
+  (allDisks.length > 0 ? allDisks : serverDisks).forEach((d, i) => {
     const name = (settingsData && settingsData.disk_friendly_names && (settingsData.disk_friendly_names[d.serial] || settingsData.disk_friendly_names[d.device])) || d.device;
     const tr = document.createElement('tr');
     tr.innerHTML = `
@@ -746,16 +700,13 @@ function buildDiskCfg(cfg) {
 function buildFanCfg(cfg) {
   const tb = document.getElementById('fanCfgBody'); tb.innerHTML = '';
   const unmonitored = (cfg && cfg.unmonitored_fans) || [];
-  const fanList = allFans.length > 0 ? allFans : serverFans;
-  fanList.forEach((f, i) => {
-    const name = f.friendly_name || f.fan_id;
-    const rpm = f.current_rpm != null ? `${f.current_rpm} rpm` : '— rpm';
+  (allFans.length > 0 ? allFans : serverFans).forEach((f, i) => {
     const monitored = !unmonitored.includes(f.fan_id);
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td><code style="font-size:12px;color:var(--color-text-secondary);">${f.fan_id}</code></td>
-      <td><input class="cfg-input" id="fname-${i}" value="${name}"></td>
-      <td><span style="font-size:13px;color:var(--color-text-secondary);">${rpm}</span></td>
+      <td><input class="cfg-input" id="fname-${i}" value="${f.friendly_name || f.fan_id}"></td>
+      <td><span style="font-size:13px;color:var(--color-text-secondary);">${f.current_rpm != null ? f.current_rpm + ' rpm' : '— rpm'}</span></td>
       <td><label class="toggle"><input type="checkbox" ${monitored ? 'checked' : ''} id="fmon-${i}" onchange="onFanMonitorChange(${i})"><span class="toggle-slider"></span></label></td>
       <td><label class="toggle"><input type="checkbox" ${f.controlled ? 'checked' : ''} id="fctrl-${i}"><span class="toggle-slider"></span></label></td>
       <td><button class="test-btn" id="test-${f.fan_id}" onclick="testFan('${f.fan_id}')"><i class="ti ti-player-play" style="font-size:11px;margin-right:3px;"></i>${T.test}</button></td>`;
@@ -765,8 +716,7 @@ function buildFanCfg(cfg) {
 }
 
 function onFanMonitorChange(i) {
-  const mon = document.getElementById(`fmon-${i}`);
-  const ctrl = document.getElementById(`fctrl-${i}`);
+  const mon = document.getElementById(`fmon-${i}`), ctrl = document.getElementById(`fctrl-${i}`);
   if (!mon || !ctrl) return;
   if (!mon.checked) { ctrl.checked = false; ctrl.disabled = true; } else { ctrl.disabled = false; }
 }
@@ -784,8 +734,7 @@ async function testFan(id, btnEl) {
   const pollTest = setInterval(async () => {
     const status = await api('GET', '/dashboard/test-status');
     if (status && !status.test_in_progress) {
-      clearInterval(pollTest);
-      window._testRunning = false;
+      clearInterval(pollTest); window._testRunning = false;
       document.querySelectorAll('.test-btn').forEach(b => b.disabled = false);
       if (btn) { btn.classList.remove('testing'); btn.innerHTML = `<i class="ti ti-player-play" style="font-size:11px;margin-right:3px;"></i>${T.test}`; }
       if (bar) bar.style.background = '#378ADD';
@@ -797,37 +746,22 @@ function setUnit(u) {
   unit = u;
   document.getElementById('btnC').classList.toggle('active', u === 'C');
   document.getElementById('btnF').classList.toggle('active', u === 'F');
-  renderDiskGrid();
-  if (chart) refresh();
-}
-
-function setLanguage(langCode) {
-  if (!TRANSLATIONS[langCode]) return;
-  activeLang = langCode;
-  applyLanguage(langCode);
-  if (serverDisks.length) renderDiskGrid();
-  if (serverFans.length) renderFanPanel();
+  renderDiskGrid(); if (chart) refresh();
 }
 
 async function rescanHardware() {
   const badge = document.getElementById('scanBadge');
-  badge.textContent = T.scanning;
-  badge.style.background = 'var(--color-background-warning)';
-  badge.style.color = 'var(--color-text-warning)';
+  badge.textContent = T.scanning; badge.style.background = 'var(--color-background-warning)'; badge.style.color = 'var(--color-text-warning)';
   const data = await api('POST', '/settings/scan');
-  badge.textContent = T.scanned;
-  badge.style.background = '';
-  badge.style.color = '';
+  badge.textContent = T.scanned; badge.style.background = ''; badge.style.color = '';
   if (data) {
     serverDisks = data.disks; allDisks = data.disks; serverFans = data.fans;
     settingsData = await api('GET', '/settings/');
     allFans = settingsData.all_fans || data.fans;
     buildDiskCfg(settingsData); buildFanCfg(settingsData);
     const diagPanel = document.getElementById('fanDiagnostic');
-    if (data.fans.length === 0 && diagPanel) {
-      const diag = await api('GET', '/settings/fan-diagnostic');
-      if (diag) showFanDiagnostic(diag, diagPanel);
-    } else if (diagPanel) { diagPanel.classList.add('hidden'); }
+    if (data.fans.length === 0 && diagPanel) { const diag = await api('GET', '/settings/fan-diagnostic'); if (diag) showFanDiagnostic(diag, diagPanel); }
+    else if (diagPanel) diagPanel.classList.add('hidden');
   }
 }
 
@@ -840,58 +774,36 @@ function showFanDiagnostic(diag, panel) {
   }
   if (diag.chip_detected && !diag.module_loaded) {
     panel.style.cssText = 'background:var(--color-background-warning);border:0.5px solid var(--color-border-warning);color:var(--color-text-warning);';
-    panel.innerHTML = `
-      <i class="ti ti-alert-triangle" style="margin-right:6px;"></i>
-      <strong>${T.diagChipDriverNotLoaded}</strong> ${diag.chip_detected}<br><br>
+    panel.innerHTML = `<i class="ti ti-alert-triangle" style="margin-right:6px;"></i><strong>${T.diagChipDriverNotLoaded}</strong> ${diag.chip_detected}<br><br>
       <strong>${T.diagLoadNow}</strong><br>
       <code style="display:block;margin:.5rem 0;padding:.4rem .6rem;background:rgba(0,0,0,.1);border-radius:4px;">${diag.instructions.load_now}</code>
-      <strong>${T.diagPersistTruenas}</strong><br>
-      <span style="font-size:12px;">${diag.instructions.persist_truenas}</span><br><br>
+      <strong>${T.diagPersistTruenas}</strong><br><span style="font-size:12px;">${diag.instructions.persist_truenas}</span><br><br>
       <strong>${T.diagPersistLinux}</strong><br>
       <code style="display:block;margin:.5rem 0;padding:.4rem .6rem;background:rgba(0,0,0,.1);border-radius:4px;">${diag.instructions.persist_linux}</code>
       ${T.diagAfterRescan}`;
-    if (diag.module_alternative) {
-      panel.innerHTML += `<br><strong>${T.diagAlternativeModule}</strong><br>
-        <code style="display:block;margin:.5rem 0;padding:.4rem .6rem;background:rgba(0,0,0,.1);border-radius:4px;">modprobe ${diag.module_alternative}</code>`;
-    }
+    if (diag.module_alternative) panel.innerHTML += `<br><strong>${T.diagAlternativeModule}</strong><br><code style="display:block;margin:.5rem 0;padding:.4rem .6rem;background:rgba(0,0,0,.1);border-radius:4px;">modprobe ${diag.module_alternative}</code>`;
     return;
   }
   panel.style.cssText = 'background:var(--color-background-danger);border:0.5px solid var(--color-border-danger);color:var(--color-text-danger);';
-  panel.innerHTML = `
-    <i class="ti ti-x" style="margin-right:6px;"></i>
-    <strong>${T.diagNoChip}</strong><br>
-    <span style="font-size:12px;margin-top:.5rem;display:block;">${T.diagNoChipDesc}</span>`;
+  panel.innerHTML = `<i class="ti ti-x" style="margin-right:6px;"></i><strong>${T.diagNoChip}</strong><br><span style="font-size:12px;margin-top:.5rem;display:block;">${T.diagNoChipDesc}</span>`;
 }
 
 async function saveSettings() {
   const names = {};
   (allDisks.length > 0 ? allDisks : serverDisks).forEach((d, i) => { const el = document.getElementById(`dname-${i}`); if (el) names[d.serial] = el.value; });
   await api('PUT', '/settings/friendly-names', { names });
-  const unmonitored = [];
+  const unmonitored = [], unmonitored_fans = [];
   (allDisks.length > 0 ? allDisks : serverDisks).forEach((d, i) => { const el = document.getElementById(`dmon-${i}`); if (el && !el.checked) unmonitored.push(d.device); });
-  const unmonitored_fans = [];
-  (allFans.length > 0 ? allFans : serverFans).forEach((f, i) => { const el = document.getElementById(`fmon-${i}`); if (el && !el.checked) unmonitored_fans.push(f.fan_id); });
   const fanList = allFans.length > 0 ? allFans : serverFans;
+  fanList.forEach((f, i) => { const el = document.getElementById(`fmon-${i}`); if (el && !el.checked) unmonitored_fans.push(f.fan_id); });
   for (let i = 0; i < fanList.length; i++) {
-    const f = fanList[i];
-    const nameEl = document.getElementById(`fname-${i}`);
-    const ctrlEl = document.getElementById(`fctrl-${i}`);
-    if (nameEl || ctrlEl) {
-      await api('PATCH', `/settings/fans/${f.fan_id}`, {
-        friendly_name: nameEl ? nameEl.value : undefined,
-        controlled: ctrlEl ? ctrlEl.checked : undefined,
-      });
-    }
+    const f = fanList[i], nameEl = document.getElementById(`fname-${i}`), ctrlEl = document.getElementById(`fctrl-${i}`);
+    if (nameEl || ctrlEl) await api('PATCH', `/settings/fans/${f.fan_id}`, { friendly_name: nameEl ? nameEl.value : undefined, controlled: ctrlEl ? ctrlEl.checked : undefined });
   }
   const langSel = document.getElementById('langSelect');
   const selectedLang = langSel ? langSel.value : activeLang;
-  await api('PATCH', '/settings/global', {
-    temp_unit: unit,
-    unmonitored_disks: unmonitored,
-    unmonitored_fans: unmonitored_fans,
-    language: selectedLang,
-  });
-  if (selectedLang !== activeLang) setLanguage(selectedLang);
+  await api('PATCH', '/settings/global', { temp_unit: unit, unmonitored_disks: unmonitored, unmonitored_fans, language: selectedLang });
+  if (selectedLang !== activeLang) await loadLanguage(selectedLang);
   settingsData = await api('GET', '/settings/');
   if (settingsData) {
     if (settingsData.all_disks && settingsData.all_disks.length > 0) allDisks = settingsData.all_disks;
@@ -910,10 +822,7 @@ async function discardSettings() {
   showView('dashboard', document.getElementById('navDash'));
 }
 
-function dismissBanner() {
-  document.getElementById('onboardBanner').style.display = 'none';
-  localStorage.setItem('fd_banner_dismissed', '1');
-}
+function dismissBanner() { document.getElementById('onboardBanner').style.display = 'none'; localStorage.setItem('fd_banner_dismissed', '1'); }
 
 async function resetConfig() {
   if (!confirm(T.resetConfigConfirm)) return;
