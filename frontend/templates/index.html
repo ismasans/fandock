@@ -15,17 +15,17 @@
     <div class="login-logo">
       <i class="ti ti-wind" style="font-size:36px;color:#378ADD;"></i>
       <h1>FanDock</h1>
-      <p>Disk temperature fan controller</p>
+      <p id="loginSubtitle"></p>
     </div>
-    <div class="login-err" id="loginErr">Incorrect username or password.</div>
-    <div class="field"><label>Username</label><input type="text" id="loginUser" placeholder="admin" /></div>
-    <div class="field"><label>Password</label><input type="password" id="loginPass" placeholder="••••••••" /></div>
+    <div class="login-err" id="loginErr"></div>
+    <div class="field"><label id="labelUser"></label><input type="text" id="loginUser" placeholder="admin" /></div>
+    <div class="field"><label id="labelPass"></label><input type="password" id="loginPass" placeholder="••••••••" /></div>
     <div id="defaultCredsHint" style="background:var(--color-background-info);border:0.5px solid var(--color-border-info);border-radius:var(--border-radius-md);padding:.625rem .875rem;font-size:12px;color:var(--color-text-info);margin-bottom:.75rem;">
-      Default credentials: <strong>admin</strong> / <strong>fandock</strong><br>
-      You will be asked to change your password after signing in.<br>
-      <a href="https://github.com/ismasans/fandock#password-reset" target="_blank" style="color:var(--color-text-info);font-size:11px;margin-top:4px;display:inline-block;">Forgot your password?</a>
+      <span id="hintDefaultCreds"></span><br>
+      <span id="hintDefaultCredsNote"></span><br>
+      <a id="hintForgotPwd" href="https://github.com/ismasans/fandock#password-reset" target="_blank" style="color:var(--color-text-info);font-size:11px;margin-top:4px;display:inline-block;"></a>
     </div>
-    <button class="btn btn-primary" style="width:100%;margin-top:.25rem;padding:9px;" onclick="doLogin()">Sign in</button>
+    <button class="btn btn-primary" id="btnSignIn" style="width:100%;margin-top:.25rem;padding:9px;" onclick="doLogin()"></button>
   </div>
 </div>
 
@@ -34,29 +34,25 @@
   <div class="login-card" style="max-width:480px;">
     <div class="login-logo">
       <i class="ti ti-wind" style="font-size:36px;color:#378ADD;"></i>
-      <h1>Welcome to FanDock</h1>
-      <p>Let's identify your hardware before you start.</p>
+      <h1 id="wizTitle"></h1>
+      <p id="wizSubtitle"></p>
     </div>
-
-    <!-- Step 1: Change password -->
     <div id="wizardStep1">
-      <p style="font-size:13px;color:var(--color-text-secondary);margin-bottom:1rem;">First, set a secure password to protect access to FanDock.</p>
-      <div class="field" id="wizCurrentPwdField"><label>Current password</label><input type="password" id="wizPwdCurrent" /></div>
-      <div class="field"><label>New password</label><input type="password" id="wizPwdNew" /></div>
-      <div class="field"><label>Confirm new password</label><input type="password" id="wizPwdConfirm" /></div>
+      <p id="wizStep1Desc" style="font-size:13px;color:var(--color-text-secondary);margin-bottom:1rem;"></p>
+      <div class="field"><label id="labelWizCurrentPwd"></label><input type="password" id="wizPwdCurrent" /></div>
+      <div class="field"><label id="labelWizNewPwd"></label><input type="password" id="wizPwdNew" /></div>
+      <div class="field"><label id="labelWizConfirmPwd"></label><input type="password" id="wizPwdConfirm" /></div>
       <div class="login-err" id="wizPwdErr"></div>
-      <button class="btn btn-primary" style="width:100%;padding:9px;margin-top:.25rem;" onclick="wizardSetPassword()">Set password & continue</button>
+      <button class="btn btn-primary" id="btnWizSetPwd" style="width:100%;padding:9px;margin-top:.25rem;" onclick="wizardSetPassword()"></button>
     </div>
-
-    <!-- Step 2: Hardware scan -->
     <div id="wizardStep2" class="hidden">
-      <p style="font-size:13px;color:var(--color-text-secondary);margin-bottom:1rem;">FanDock has scanned your hardware. Assign friendly names to identify each device.</p>
-      <p class="section-label" style="margin-top:1rem;">Disks</p>
+      <p id="wizStep2Desc" style="font-size:13px;color:var(--color-text-secondary);margin-bottom:1rem;"></p>
+      <p class="section-label" id="wizDisksLabel" style="margin-top:1rem;"></p>
       <div id="wizDiskList"></div>
-      <p class="section-label" style="margin-top:1rem;">Fans</p>
+      <p class="section-label" id="wizFansLabel" style="margin-top:1rem;"></p>
       <div id="wizFanList"></div>
-      <p style="font-size:11px;color:var(--color-text-tertiary);margin-top:1rem;">Fan curves will use optimized defaults. You can adjust them later in the Curves section.</p>
-      <button class="btn btn-primary" style="width:100%;padding:9px;margin-top:1rem;" onclick="wizardFinish()">Finish setup</button>
+      <p id="wizCurvesNote" style="font-size:11px;color:var(--color-text-tertiary);margin-top:1rem;"></p>
+      <button class="btn btn-primary" id="btnWizFinish" style="width:100%;padding:9px;margin-top:1rem;" onclick="wizardFinish()"></button>
     </div>
   </div>
 </div>
@@ -68,8 +64,8 @@
   <div class="onboarding-banner" id="onboardBanner">
     <i class="ti ti-alert-triangle" style="font-size:18px;flex-shrink:0;margin-top:1px;"></i>
     <div>
-      <strong style="font-weight:500;">Important:</strong> FanDock controls the fans connected to your disk enclosure. Incorrect configuration may reduce airflow and shorten drive lifespan. Always verify your fan mapping using the Test button in Settings before saving a curve.
-      <button class="dismiss-btn" onclick="dismissBanner()">Dismiss</button>
+      <strong id="bannerImportant" style="font-weight:500;"></strong> <span id="bannerMsg"></span>
+      <button class="dismiss-btn" id="btnDismiss" onclick="dismissBanner()"></button>
     </div>
   </div>
 
@@ -78,13 +74,13 @@
     <div class="topbar-right">
       <div class="nav">
         <button class="nav-btn active" id="navDash" onclick="showView('dashboard',this)">
-          <i class="ti ti-layout-dashboard" style="font-size:13px;margin-right:4px;vertical-align:-1px;"></i>Dashboard
+          <i class="ti ti-layout-dashboard" style="font-size:13px;margin-right:4px;vertical-align:-1px;"></i><span id="navLabelDash"></span>
         </button>
         <button class="nav-btn" id="navCurves" onclick="showView('curves',this)">
-          <i class="ti ti-chart-line" style="font-size:13px;margin-right:4px;vertical-align:-1px;"></i>Curves
+          <i class="ti ti-chart-line" style="font-size:13px;margin-right:4px;vertical-align:-1px;"></i><span id="navLabelCurves"></span>
         </button>
         <button class="nav-btn" id="navSettings" onclick="showView('settings',this)">
-          <i class="ti ti-settings" style="font-size:13px;margin-right:4px;vertical-align:-1px;"></i>Settings
+          <i class="ti ti-settings" style="font-size:13px;margin-right:4px;vertical-align:-1px;"></i><span id="navLabelSettings"></span>
         </button>
       </div>
       <div class="user-menu">
@@ -94,11 +90,11 @@
           <i class="ti ti-chevron-down" style="font-size:12px;"></i>
         </button>
         <div class="user-dropdown hidden" id="userDropdown">
-          <button onclick="openChangePwd()"><i class="ti ti-lock" style="font-size:14px;color:var(--color-text-secondary);"></i>Change password</button>
+          <button onclick="openChangePwd()"><i class="ti ti-lock" style="font-size:14px;color:var(--color-text-secondary);"></i><span id="menuChangePwd"></span></button>
           <div class="divider"></div>
-          <button onclick="resetConfig()"><i class="ti ti-refresh" style="font-size:14px;color:var(--color-text-secondary);"></i>Reset configuration</button>
+          <button onclick="resetConfig()"><i class="ti ti-refresh" style="font-size:14px;color:var(--color-text-secondary);"></i><span id="menuResetConfig"></span></button>
           <div class="divider"></div>
-          <button class="danger" onclick="doLogout()"><i class="ti ti-logout" style="font-size:14px;"></i>Log out</button>
+          <button class="danger" onclick="doLogout()"><i class="ti ti-logout" style="font-size:14px;"></i><span id="menuLogout"></span></button>
         </div>
       </div>
     </div>
@@ -106,16 +102,16 @@
 
   <!-- DASHBOARD -->
   <div class="view active" id="view-dashboard">
-    <p class="section-label">Disk temperatures</p>
+    <p class="section-label" id="labelDiskTemps"></p>
     <div class="legend">
-      <span class="legend-item"><span class="legend-dot" style="background:#3a9e0f;"></span>Normal</span>
-      <span class="legend-item"><span class="legend-dot" style="background:#e07b00;"></span>Warm</span>
-      <span class="legend-item"><span class="legend-dot" style="background:#d42020;"></span>Hot</span>
-      <span class="legend-item"><span class="legend-dot" style="background:#5b4ef5;"></span>Critical</span>
-      <span style="font-size:11px;color:var(--color-text-tertiary);">— hover a disk to see its specific thresholds</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#3a9e0f;"></span><span id="legendNormal"></span></span>
+      <span class="legend-item"><span class="legend-dot" style="background:#e07b00;"></span><span id="legendWarm"></span></span>
+      <span class="legend-item"><span class="legend-dot" style="background:#d42020;"></span><span id="legendHot"></span></span>
+      <span class="legend-item"><span class="legend-dot" style="background:#5b4ef5;"></span><span id="legendCritical"></span></span>
+      <span id="legendHoverThreshold" style="font-size:11px;color:var(--color-text-tertiary);"></span>
     </div>
     <div class="disk-grid" id="diskGrid"></div>
-    <p class="section-label">Fan status</p>
+    <p class="section-label" id="labelFanStatus"></p>
     <div class="panel" id="fanPanel"></div>
   </div>
 
@@ -123,52 +119,41 @@
   <div class="view" id="view-curves">
     <div class="panel">
       <div class="curve-controls">
-        <span style="font-size:13px;font-weight:500;color:var(--color-text-primary);">Fan curve editor</span>
+        <span id="curvesEditorTitle" style="font-size:13px;font-weight:500;color:var(--color-text-primary);"></span>
         <select id="fanSelect"></select>
         <span class="current-info">
           <i class="ti ti-thermometer" style="font-size:13px;"></i>
-          Now: <strong id="curTempLabel" style="font-weight:500;">—</strong>
+          <span id="nowLabel"></span>: <strong id="curTempLabel" style="font-weight:500;">—</strong>
           → <strong id="curFanLabel" style="font-weight:500;">—</strong>
         </span>
       </div>
       <div class="legend" style="margin-bottom:.75rem;">
         <span class="legend-line-item">
           <svg width="24" height="3"><line x1="0" y1="1.5" x2="24" y2="1.5" stroke="#378ADD" stroke-width="2.5"/></svg>
-          Fan curve
+          <span id="legendFanCurve"></span>
         </span>
         <span class="legend-line-item">
           <svg width="24" height="3"><line x1="0" y1="1.5" x2="24" y2="1.5" stroke="#BA7517" stroke-width="2" stroke-dasharray="4,3"/></svg>
-          Current operating point
+          <span id="legendCurrentOp"></span>
         </span>
       </div>
-      <div class="curve-wrap">
-        <canvas id="curveCanvas"></canvas>
-      </div>
+      <div class="curve-wrap"><canvas id="curveCanvas"></canvas></div>
       <div id="warnBar" class="warn-bar">
         <i class="ti ti-alert-triangle" style="font-size:13px;margin-right:6px;vertical-align:-1px;"></i>
-        Warning: minimum fan speed below 20% may reduce airflow and shorten drive lifespan.
+        <span id="warnBarMsg"></span>
       </div>
       <div style="margin-top:1rem;">
-        <div class="point-list-header">
-          <span>Temperature</span><span>Fan speed (%)</span><span></span>
-        </div>
+        <div class="point-list-header"><span id="colTemperature"></span><span id="colFanSpeed"></span><span></span></div>
         <div id="pointRows"></div>
       </div>
       <div style="display:flex;gap:8px;margin-top:1rem;justify-content:flex-end;">
-        <button class="btn" onclick="addPoint()">
-          <i class="ti ti-plus" style="font-size:13px;margin-right:4px;vertical-align:-1px;"></i>Add point
-        </button>
-        <button class="btn" onclick="discardCurve()">
-          <i class="ti ti-refresh" style="font-size:13px;margin-right:4px;vertical-align:-1px;"></i>Discard changes
-        </button>
-        <button class="btn btn-primary" onclick="saveCurve()">
-          <i class="ti ti-device-floppy" style="font-size:13px;margin-right:4px;vertical-align:-1px;"></i>Save curve
-        </button>
+        <button class="btn" onclick="addPoint()"><i class="ti ti-plus" style="font-size:13px;margin-right:4px;vertical-align:-1px;"></i><span id="btnAddPoint"></span></button>
+        <button class="btn" onclick="discardCurve()"><i class="ti ti-refresh" style="font-size:13px;margin-right:4px;vertical-align:-1px;"></i><span id="btnDiscardCurve"></span></button>
+        <button class="btn btn-primary" onclick="saveCurve()"><i class="ti ti-device-floppy" style="font-size:13px;margin-right:4px;vertical-align:-1px;"></i><span id="btnSaveCurve"></span></button>
       </div>
-      <p class="hint">Drag points on the chart or edit values in the table. Points auto-sort by temperature.</p>
-      
+      <p class="hint" id="curveHintText"></p>
       <div style="margin-top:1.25rem;">
-        <p class="section-label">Linked disks — this curve reacts to the hottest selected disk</p>
+        <p class="section-label" id="linkedDisksLabel"></p>
         <div id="curveLinkedDisks"></div>
       </div>
     </div>
@@ -179,27 +164,25 @@
     <div class="panel" style="margin-bottom:1rem;">
       <h3 style="font-size:14px;font-weight:500;margin-bottom:.875rem;display:flex;align-items:center;gap:8px;">
         <i class="ti ti-scan" style="font-size:16px;color:var(--color-text-secondary);"></i>
-        Hardware detection <span class="scan-badge" id="scanBadge">scanned</span>
+        <span id="settingsHwTitle"></span> <span class="scan-badge" id="scanBadge"></span>
       </h3>
-      <p style="font-size:13px;color:var(--color-text-secondary);margin-bottom:1rem;">FanDock detected the following hardware automatically. Assign friendly names and configure each device.</p>
-      <button class="btn" onclick="rescanHardware()">
-        <i class="ti ti-refresh" style="font-size:13px;margin-right:4px;vertical-align:-1px;"></i>Re-scan hardware
-      </button>
+      <p id="settingsHwDesc" style="font-size:13px;color:var(--color-text-secondary);margin-bottom:1rem;"></p>
+      <button class="btn" onclick="rescanHardware()"><i class="ti ti-refresh" style="font-size:13px;margin-right:4px;vertical-align:-1px;"></i><span id="btnRescan"></span></button>
       <div id="fanDiagnostic" class="hidden" style="margin-top:1rem;padding:.875rem 1rem;border-radius:var(--border-radius-md);font-size:13px;"></div>
     </div>
 
     <div class="panel" style="margin-bottom:1rem;">
       <h3 style="font-size:14px;font-weight:500;margin-bottom:.875rem;display:flex;align-items:center;gap:8px;">
-        <i class="ti ti-server" style="font-size:16px;color:var(--color-text-secondary);"></i>Disks
+        <i class="ti ti-server" style="font-size:16px;color:var(--color-text-secondary);"></i><span id="settingsDisksTitle"></span>
       </h3>
       <table class="cfg-table">
         <thead><tr>
-          <th style="width:8%;">Device</th>
-          <th style="width:20%;">Model</th>
-          <th style="width:18%;">Serial</th>
-          <th style="width:7%;">Type</th>
-          <th style="width:24%;">Friendly name</th>
-          <th style="width:6%;">Monitor</th>
+          <th id="thDevice" style="width:8%;"></th>
+          <th id="thModel" style="width:20%;"></th>
+          <th id="thSerial" style="width:18%;"></th>
+          <th id="thType" style="width:7%;"></th>
+          <th id="thFriendlyName" style="width:24%;"></th>
+          <th id="thMonitor" style="width:6%;"></th>
           <th style="width:17%;"></th>
         </tr></thead>
         <tbody id="diskCfgBody"></tbody>
@@ -208,16 +191,16 @@
 
     <div class="panel" style="margin-bottom:1rem;">
       <h3 style="font-size:14px;font-weight:500;margin-bottom:.875rem;display:flex;align-items:center;gap:8px;">
-        <i class="ti ti-propeller" style="font-size:16px;color:var(--color-text-secondary);"></i>Fans
+        <i class="ti ti-propeller" style="font-size:16px;color:var(--color-text-secondary);"></i><span id="settingsFansTitle"></span>
       </h3>
-      <p style="font-size:13px;color:var(--color-text-secondary);margin-bottom:1rem;">Map each PWM channel to a physical fan. Use <strong style="font-weight:500;">Test</strong> to stop fan for 10 seconds and then spin it at full speed for 10 seconds to identify it physically.</p>
+      <p id="settingsFansDesc" style="font-size:13px;color:var(--color-text-secondary);margin-bottom:1rem;"></p>
       <table class="cfg-table">
         <thead><tr>
-          <th style="width:14%;">PWM channel</th>
-          <th style="width:26%;">Friendly name</th>
-          <th style="width:14%;">Current RPM</th>
-          <th style="width:12%;">Monitor</th>
-          <th style="width:12%;">Control</th>
+          <th id="thPwmChannel" style="width:14%;"></th>
+          <th id="thFanFriendlyName" style="width:26%;"></th>
+          <th id="thCurrentRpm" style="width:14%;"></th>
+          <th id="thFanMonitor" style="width:12%;"></th>
+          <th id="thControl" style="width:12%;"></th>
           <th style="width:22%;"></th>
         </tr></thead>
         <tbody id="fanCfgBody"></tbody>
@@ -226,68 +209,54 @@
 
     <div class="panel" style="margin-bottom:1rem;">
       <h3 style="font-size:14px;font-weight:500;margin-bottom:.875rem;display:flex;align-items:center;gap:8px;">
-        <i class="ti ti-adjustments" style="font-size:16px;color:var(--color-text-secondary);"></i>Preferences
+        <i class="ti ti-adjustments" style="font-size:16px;color:var(--color-text-secondary);"></i><span id="settingsPrefsTitle"></span>
       </h3>
       <div class="toggle-row">
-        <div><div class="toggle-label">Temperature units</div><div class="toggle-sub">Choose your preferred scale</div></div>
+        <div><div class="toggle-label" id="prefTempUnitsLabel"></div><div class="toggle-sub" id="prefTempUnitsDesc"></div></div>
         <div class="unit-toggle">
           <button class="unit-btn active" id="btnC" onclick="setUnit('C')">°C</button>
           <button class="unit-btn" id="btnF" onclick="setUnit('F')">°F</button>
         </div>
       </div>
-      <!--
       <div class="toggle-row">
-        <div><div class="toggle-label">Alert on critical temperature</div><div class="toggle-sub">Show a warning banner when a disk reaches critical level</div></div>
-        <label class="toggle"><input type="checkbox" checked id="alertToggle"><span class="toggle-slider"></span></label>
+        <div><div class="toggle-label" id="prefLangLabel"></div><div class="toggle-sub" id="prefLangDesc"></div></div>
+        <select id="langSelect" style="font-size:13px;padding:4px 8px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);"></select>
       </div>
-      <div class="toggle-row">
-        <div><div class="toggle-label">Enable monitoring</div><div class="toggle-sub">Poll SMART temperatures at the configured interval</div></div>
-        <label class="toggle"><input type="checkbox" checked id="monitorToggle"><span class="toggle-slider"></span></label>
-      </div>
-      <div class="toggle-row">
-        <div><div class="toggle-label">Enable fan control</div><div class="toggle-sub">Automatically adjust PWM based on disk temperatures</div></div>
-        <label class="toggle"><input type="checkbox" checked id="controlToggle"><span class="toggle-slider"></span></label>
-      </div>
-      -->
     </div>
 
     <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:.5rem;">
-      <button class="btn" onclick="discardSettings()">Discard changes</button>
-      <button class="btn btn-primary" onclick="saveSettings()">
-        <i class="ti ti-device-floppy" style="font-size:13px;margin-right:4px;vertical-align:-1px;"></i>Save settings
-      </button>
+      <button class="btn" id="btnDiscardSettings" onclick="discardSettings()"></button>
+      <button class="btn btn-primary" onclick="saveSettings()"><i class="ti ti-device-floppy" style="font-size:13px;margin-right:4px;vertical-align:-1px;"></i><span id="btnSaveSettings"></span></button>
     </div>
   </div>
 
   <!-- FOOTER -->
   <footer style="margin-top:2rem;padding-top:1rem;border-top:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-    <span style="font-size:11px;color:var(--color-text-tertiary);">
-      FanDock <span id="footerVersion"></span> — Open-source NAS fan controller
-    </span>
+    <span style="font-size:11px;color:var(--color-text-tertiary);">FanDock <span id="footerVersion"></span> — <span id="footerTagline"></span></span>
     <div style="display:flex;gap:12px;">
       <a href="https://github.com/ismasans/fandock" target="_blank" style="font-size:11px;color:var(--color-text-tertiary);text-decoration:none;display:flex;align-items:center;gap:4px;">
-        <i class="ti ti-brand-github" style="font-size:14px;"></i>GitHub
+        <i class="ti ti-brand-github" style="font-size:14px;"></i><span id="footerGithub"></span>
       </a>
       <a href="https://github.com/ismasans/fandock/issues/new" target="_blank" style="font-size:11px;color:var(--color-text-tertiary);text-decoration:none;display:flex;align-items:center;gap:4px;">
-        <i class="ti ti-bug" style="font-size:14px;"></i>Report issue
+        <i class="ti ti-bug" style="font-size:14px;"></i><span id="footerReportIssue"></span>
       </a>
     </div>
   </footer>
 
-</div><!-- /container -->
-</div><!-- /mainView -->
+</div>
+</div>
 
 <!-- CHANGE PASSWORD MODAL -->
 <div class="modal-bg hidden" id="pwdModal">
   <div class="modal">
-    <h3><i class="ti ti-lock" style="font-size:15px;margin-right:6px;vertical-align:-2px;"></i>Change password</h3>
-    <div class="field"><label>Current password</label><input type="password" id="pwdCurrent" /></div>
-    <div class="field"><label>New password</label><input type="password" id="pwdNew" /></div>
-    <div class="field"><label>Confirm new password</label><input type="password" id="pwdConfirm" /></div>
+    <h3><i class="ti ti-lock" style="font-size:15px;margin-right:6px;vertical-align:-2px;"></i><span id="modalChangePwdTitle"></span></h3>
+    <div class="field"><label id="modalLabelCurrentPwd"></label><input type="password" id="pwdCurrent" /></div>
+    <div class="field"><label id="modalLabelNewPwd"></label><input type="password" id="pwdNew" /></div>
+    <div class="field"><label id="modalLabelConfirmPwd"></label><input type="password" id="pwdConfirm" /></div>
     <div class="login-err" id="pwdErr"></div>
     <div class="modal-actions">
-      <button class="btn" onclick="closePwdModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="doChangePwd()">Update password</button>
+      <button class="btn" id="modalBtnCancel" onclick="closePwdModal()"></button>
+      <button class="btn btn-primary" id="modalBtnUpdatePwd" onclick="doChangePwd()"></button>
     </div>
   </div>
 </div>

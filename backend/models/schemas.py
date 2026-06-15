@@ -1,16 +1,7 @@
-"""
-FanDock – shared Pydantic models.
-All domain objects used by API routes and services live here.
-"""
-
 from __future__ import annotations
 from typing import Literal, Optional
 from pydantic import BaseModel, Field
 
-
-# ---------------------------------------------------------------------------
-# Auth
-# ---------------------------------------------------------------------------
 
 class LoginRequest(BaseModel):
     username: str
@@ -27,18 +18,14 @@ class TokenResponse(BaseModel):
     is_default_password: bool = True
 
 
-# ---------------------------------------------------------------------------
-# Disks / SMART
-# ---------------------------------------------------------------------------
-
 DiskType = Literal["HDD", "SSD", "NVMe"]
 
 class DiskInfo(BaseModel):
-    device: str                     # e.g. "/dev/sdb"
+    device: str
     model: str
     serial: str
     type: DiskType
-    temperature_c: Optional[float]  # None if unreadable
+    temperature_c: Optional[float]
     friendly_name: Optional[str] = None
 
 class DiskTemperatureReading(BaseModel):
@@ -51,24 +38,16 @@ class DiskTemperatureReading(BaseModel):
     friendly_name: Optional[str] = None
 
 
-# ---------------------------------------------------------------------------
-# Fans
-# ---------------------------------------------------------------------------
-
 class FanStatus(BaseModel):
-    fan_id: str                     # e.g. "fan0"
+    fan_id: str
     friendly_name: Optional[str] = None
-    pwm_path: str                   # e.g. "/sys/class/hwmon/hwmon1/pwm1"
-    rpm_path: Optional[str] = None  # e.g. "/sys/class/hwmon/hwmon1/fan1_input"
-    current_pwm: int                # 0-255
+    pwm_path: str
+    rpm_path: Optional[str] = None
+    current_pwm: int
     current_rpm: Optional[int] = None
     enabled: bool = True
     controlled: bool = True
 
-
-# ---------------------------------------------------------------------------
-# Fan Curve
-# ---------------------------------------------------------------------------
 
 class CurvePoint(BaseModel):
     temp_c: float = Field(..., ge=0, le=100)
@@ -76,12 +55,8 @@ class CurvePoint(BaseModel):
 
 class FanCurve(BaseModel):
     fan_id: str
-    points: list[CurvePoint]        # must be sorted by temp_c, min 2 points
+    points: list[CurvePoint]
 
-
-# ---------------------------------------------------------------------------
-# Settings / Config
-# ---------------------------------------------------------------------------
 
 class FanConfig(BaseModel):
     fan_id: str
@@ -91,13 +66,14 @@ class FanConfig(BaseModel):
     enabled: bool = True
     controlled: bool = True
     curve: list[CurvePoint] = Field(default_factory=list)
-    linked_disks: list[str] = Field(default_factory=list)  # disk serials
+    linked_disks: list[str] = Field(default_factory=list)
 
 class AppConfig(BaseModel):
     password_hash: str
     fans: list[FanConfig] = Field(default_factory=list)
     disk_friendly_names: dict[str, str] = Field(default_factory=dict)
     temp_unit: Literal["C", "F"] = "C"
+    language: Optional[str] = None
     monitor_enabled: bool = True
     control_enabled: bool = True
     poll_interval_seconds: int = Field(default=10, ge=5, le=300)
@@ -106,18 +82,9 @@ class AppConfig(BaseModel):
     first_run: bool = True
 
 
-# ---------------------------------------------------------------------------
-# Hardware scan result (Settings page)
-# ---------------------------------------------------------------------------
-
 class HardwareScanResult(BaseModel):
     disks: list[DiskInfo]
     fans: list[FanStatus]
-
-
-# ---------------------------------------------------------------------------
-# Dashboard snapshot (single polling response)
-# ---------------------------------------------------------------------------
 
 class DashboardSnapshot(BaseModel):
     disks: list[DiskTemperatureReading]
