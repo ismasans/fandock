@@ -4,7 +4,7 @@ let activeLang = 'en';
 
 function _detectBrowserLang() {
   const lang = (navigator.language || '').split('-')[0].toLowerCase();
-  return availableLangs.includes(lang) ? lang : 'en';
+  return availableLangs.some(l => l.code === lang) ? lang : 'en';
 }
 
 async function loadLanguage(langCode) {
@@ -164,10 +164,10 @@ function applyI18n() {
   const langSel = document.getElementById('langSelect');
   if (langSel) {
     if (langSel.options.length === 0) {
-      availableLangs.forEach(code => {
+      availableLangs.forEach(lang => {
         const opt = document.createElement('option');
-        opt.value = code;
-        opt.textContent = code.toUpperCase();
+        opt.value = lang.code;
+        opt.textContent = lang.name;
         langSel.appendChild(opt);
       });
     }

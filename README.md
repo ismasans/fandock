@@ -138,8 +138,9 @@ This resets the password to `fandock` and triggers the first-run wizard on next 
 FanDock uses simple JSON files for translations. To add a new language:
 
 1. Copy `frontend/static/js/i18n/en.json` to a new file named with the 2-letter language code (e.g. `pt.json` for Portuguese)
-2. Translate all the values — do not change the keys
-3. Open a Pull Request
+2. Also change `"_name": "English",` at the top of the file with the name of the language (e.g. `"_name": "Português"`).
+3. Translate all the values — do not change the keys
+4. Open a Pull Request
 
 No JavaScript knowledge required — only the JSON file needs translating.
 The new language will be detected and added to the selector automatically.

@@ -126,10 +126,17 @@ async def fan_diagnostic(_user: str = Depends(get_current_user)):
 
 @router.get("/languages")
 async def available_languages():
-    import os
+    import os, json
     i18n_path = os.path.join(os.path.dirname(__file__), '../../frontend/static/js/i18n')
     languages = []
     for f in sorted(os.listdir(i18n_path)):
         if f.endswith('.json'):
-            languages.append(f.replace('.json', ''))
+            code = f.replace('.json', '')
+            try:
+                with open(os.path.join(i18n_path, f), encoding='utf-8') as fh:
+                    data = json.load(fh)
+                    name = data.get('_name', code.upper())
+            except Exception:
+                name = code.upper()
+            languages.append({"code": code, "name": name})
     return {"languages": languages}
