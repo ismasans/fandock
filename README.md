@@ -13,7 +13,7 @@
 - 🌀 Fan speed control with customizable fan curves (drag-to-edit)
 - 🔒 Simple login / password change
 - ⚙️ Hardware auto-scan, friendly names, PWM mapping, Test button
-- 🌍 i18n-ready UI. Currently includes English, Spanish, French and German. If you’d like to contribute with new languages, please read the section 'Adding a language'.
+- 🌍 i18n-ready UI. Currently includes English, Spanish, French and German. If you’d like to contribute with new languages, please read the [Adding a language](#adding-a-language) section.
 - 🔔 Visual critical alerts (v1.1: email via SMTP)
 
 
