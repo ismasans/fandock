@@ -145,14 +145,14 @@ td .toggle { display: inline-block; vertical-align: middle; margin-top: 2px; }
 .toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
 .toggle-slider { position: absolute; inset: 0; background: var(--color-background-secondary); border-radius: 10px; border: 0.5px solid var(--color-border-secondary); cursor: pointer; transition: .2s; }
 .toggle-slider:before { content: ''; position: absolute; width: 14px; height: 14px; left: 2px; top: 2px; background: var(--color-text-tertiary); border-radius: 50%; transition: .2s; }
+.toggle input:checked + .toggle-slider { background: var(--color-background-info); border-color: var(--color-border-info); }
+.toggle input:checked + .toggle-slider:before { transform: translateX(16px); background: #fff; }
 @media (prefers-color-scheme: light) {
   .toggle-slider { background: #dddde0; border-color: #c0c0c4; }
   .toggle-slider:before { background: #666; }
   .toggle input:checked + .toggle-slider { background: #378ADD; border-color: #2a6fb5; }
   .toggle input:checked + .toggle-slider:before { background: #fff; }
 }
-.toggle input:checked + .toggle-slider { background: var(--color-background-info); border-color: var(--color-border-info); }
-.toggle input:checked + .toggle-slider:before { transform: translateX(16px); background: #fff; }
 .scan-badge { font-size: 11px; padding: 2px 8px; border-radius: var(--border-radius-md); background: var(--color-background-success); color: var(--color-text-success); }
 .detected-badge { font-size: 11px; padding: 2px 8px; border-radius: var(--border-radius-md); background: var(--color-background-secondary); color: var(--color-text-tertiary); }
 .test-btn { font-size: 12px; padding: 3px 10px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: transparent; color: var(--color-text-secondary); cursor: pointer; white-space: nowrap; }
