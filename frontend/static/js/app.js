@@ -509,7 +509,7 @@ function renderFanPanel() {
     fill.id = `fan-arc-${f.fan_id}`;
     fill.setAttribute('d', _fanArcD(pct));
     fill.setAttribute('fill', 'none');
-    fill.setAttribute('stroke', rpm === 0 ? 'var(--color-border-secondary)' : '#378ADD');
+    fill.setAttribute('stroke', rpm === 0 ? 'var(--color-border-tertiary)' : '#378ADD');
     fill.setAttribute('stroke-width', STROKE);
     fill.setAttribute('stroke-linecap', 'round');
     svg.appendChild(fill);
