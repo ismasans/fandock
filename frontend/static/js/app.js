@@ -449,6 +449,7 @@ function renderDiskGrid() {
 const _fanRotations = {};
 let _fanAnimFrame = null;
 let _fanLastTs = null;
+let _fanDisplayedRpms = {};
 
 function _fanAnimate(ts) {
   if (!_fanLastTs) _fanLastTs = ts;
@@ -457,7 +458,14 @@ function _fanAnimate(ts) {
   serverFans.forEach(f => {
     if (!_fanRotations[f.fan_id]) _fanRotations[f.fan_id] = 0;
     const rpm = f.current_rpm || 0;
-    _fanRotations[f.fan_id] = (_fanRotations[f.fan_id] + rpm * dt) % 360;
+    // Initialize displayed rpm if first time
+    if (_fanDisplayedRpms[f.fan_id] == null) _fanDisplayedRpms[f.fan_id] = rpm;
+    // Smoothly approach the target rpm using an exponential smoothing (time constant tau)
+    const tau = 0.25; // seconds — lower = quicker response, higher = slower deceleration
+    const alpha = 1 - Math.exp(-dt / tau);
+    _fanDisplayedRpms[f.fan_id] += (rpm - _fanDisplayedRpms[f.fan_id]) * alpha;
+    const usedRpm = _fanDisplayedRpms[f.fan_id];
+    _fanRotations[f.fan_id] = (_fanRotations[f.fan_id] + usedRpm * dt) % 360;
     const icon = document.getElementById(`fan-icon-${f.fan_id}`);
     if (icon) icon.setAttribute('transform', `translate(70,70) rotate(${_fanRotations[f.fan_id].toFixed(1)})`);
   });
