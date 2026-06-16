@@ -446,22 +446,105 @@ function renderDiskGrid() {
   });
 }
 
+const _fanRotations = {};
+let _fanAnimFrame = null;
+let _fanLastTs = null;
+
+function _fanAnimate(ts) {
+  if (!_fanLastTs) _fanLastTs = ts;
+  const dt = Math.min((ts - _fanLastTs) / 1000, 0.05);
+  _fanLastTs = ts;
+  serverFans.forEach(f => {
+    if (!_fanRotations[f.fan_id]) _fanRotations[f.fan_id] = 0;
+    const rpm = f.current_rpm || 0;
+    _fanRotations[f.fan_id] = (_fanRotations[f.fan_id] + rpm * dt) % 360;
+    const icon = document.getElementById(`fan-icon-${f.fan_id}`);
+    if (icon) icon.setAttribute('transform', `translate(70,70) rotate(${_fanRotations[f.fan_id].toFixed(1)})`);
+  });
+  _fanAnimFrame = requestAnimationFrame(_fanAnimate);
+}
+
+function _fanArcD(pct) {
+  const R = 52, CX = 70, CY = 70;
+  const GAP = 60, ARC = 300;
+  const startAngle = 90 + GAP / 2;
+  const sweep = ARC * Math.max(0.001, Math.min(1, pct));
+  const toRad = a => a * Math.PI / 180;
+  const pt = a => ({ x: CX + R * Math.cos(toRad(a)), y: CY + R * Math.sin(toRad(a)) });
+  const s = pt(startAngle), e = pt(startAngle + sweep);
+  return `M ${s.x.toFixed(2)} ${s.y.toFixed(2)} A ${R} ${R} 0 ${sweep > 180 ? 1 : 0} 1 ${e.x.toFixed(2)} ${e.y.toFixed(2)}`;
+}
+
 function renderFanPanel() {
   const panel = document.getElementById('fanPanel');
+  if (_fanAnimFrame) { cancelAnimationFrame(_fanAnimFrame); _fanAnimFrame = null; _fanLastTs = null; }
   panel.innerHTML = '';
+  panel.style.cssText = 'display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:12px;';
+
+  const ns = 'http://www.w3.org/2000/svg';
   serverFans.forEach(f => {
-    const pct = Math.round(f.current_pwm / 255 * 100);
+    const pct = f.current_pwm / 255;
+    const rpm = f.current_rpm || 0;
     const label = f.friendly_name || f.fan_id;
-    const rpm = f.current_rpm != null ? `${f.current_rpm} rpm` : '';
-    const row = document.createElement('div');
-    row.className = 'fan-row';
-    row.innerHTML = `
-      <span class="fan-label">${label}</span>
-      <div class="progress-bg"><div class="progress-fill" id="bar-${f.fan_id}" style="width:${pct}%"></div></div>
-      <span class="fan-value">${pct}%</span>
-      <span class="fan-rpm">${rpm}</span>`;
-    panel.appendChild(row);
+    const R = 52, CX = 70, CY = 70, STROKE = 14;
+    const bladeR = R - STROKE - 6;
+
+    const card = document.createElement('div');
+    card.style.cssText = 'background:var(--color-background-primary); border:0.5px solid var(--color-border-tertiary); border-radius:var(--border-radius-lg); padding:1rem; display:flex; flex-direction:column; align-items:center;';
+
+    const svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', '0 0 140 140');
+    svg.setAttribute('width', '140');
+    svg.setAttribute('height', '140');
+
+    const track = document.createElementNS(ns, 'path');
+    track.setAttribute('d', _fanArcD(1));
+    track.setAttribute('fill', 'none');
+    track.setAttribute('stroke', 'var(--color-border-secondary)');
+    track.setAttribute('stroke-width', STROKE);
+    track.setAttribute('stroke-linecap', 'round');
+    svg.appendChild(track);
+
+    const fill = document.createElementNS(ns, 'path');
+    fill.id = `fan-arc-${f.fan_id}`;
+    fill.setAttribute('d', _fanArcD(pct));
+    fill.setAttribute('fill', 'none');
+    fill.setAttribute('stroke', rpm === 0 ? 'var(--color-border-secondary)' : '#378ADD');
+    fill.setAttribute('stroke-width', STROKE);
+    fill.setAttribute('stroke-linecap', 'round');
+    svg.appendChild(fill);
+
+    const iconG = document.createElementNS(ns, 'g');
+    iconG.id = `fan-icon-${f.fan_id}`;
+    iconG.setAttribute('transform', `translate(${CX},${CY})`);
+    for (let i = 0; i < 4; i++) {
+      const blade = document.createElementNS(ns, 'ellipse');
+      blade.setAttribute('cx', (bladeR * 0.45).toFixed(1));
+      blade.setAttribute('cy', '0');
+      blade.setAttribute('rx', (bladeR * 0.45).toFixed(1));
+      blade.setAttribute('ry', (bladeR * 0.22).toFixed(1));
+      blade.setAttribute('fill', 'var(--color-text-secondary)');
+      blade.setAttribute('opacity', '0.9');
+      blade.setAttribute('transform', `rotate(${i * 90})`);
+      iconG.appendChild(blade);
+    }
+    const hub = document.createElementNS(ns, 'circle');
+    hub.setAttribute('cx', '0'); hub.setAttribute('cy', '0');
+    hub.setAttribute('r', (bladeR * 0.14).toFixed(1));
+    hub.setAttribute('fill', 'var(--color-text-primary)');
+    iconG.appendChild(hub);
+    svg.appendChild(iconG);
+    card.appendChild(svg);
+
+    card.innerHTML += `
+      <div style="font-size:13px; font-weight:500; color:var(--color-text-primary); margin-top:4px;">${label}</div>
+      <div id="fan-pct-${f.fan_id}" style="font-size:20px; font-weight:500; color:var(--color-text-primary);">${Math.round(pct * 100)}%</div>
+      <div id="fan-rpm-${f.fan_id}" style="font-size:12px; color:var(--color-text-secondary);">${rpm === 0 ? 'stopped' : rpm + ' rpm'}</div>`;
+
+    panel.appendChild(card);
   });
+
+  if (serverFans.length > 0) requestAnimationFrame(_fanAnimate);
 }
 
 function showCriticalBanner() {
