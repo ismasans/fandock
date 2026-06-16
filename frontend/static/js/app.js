@@ -461,7 +461,7 @@ function _fanAnimate(ts) {
     // Initialize displayed rpm if first time
     if (_fanDisplayedRpms[f.fan_id] == null) _fanDisplayedRpms[f.fan_id] = rpm;
     // Smoothly approach the target rpm using an exponential smoothing (time constant tau)
-    const tau = 0.25; // seconds — lower = quicker response, higher = slower deceleration
+    const tau = 1; // seconds — lower = quicker response, higher = slower deceleration
     const alpha = 1 - Math.exp(-dt / tau);
     _fanDisplayedRpms[f.fan_id] += (rpm - _fanDisplayedRpms[f.fan_id]) * alpha;
     const usedRpm = _fanDisplayedRpms[f.fan_id];
