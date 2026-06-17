@@ -30,7 +30,7 @@
   "errorLoadingData": "Error loading data from server.",
   "scanning": "scanning…",
   "scanned": "scanned",
-  "thresholdsLabel": "thresholds",
+  "thresholdsLabel": "{type} thresholds",
   "normal": "Normal",
   "warm": "Warm",
   "hot": "Hot",

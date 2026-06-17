@@ -420,7 +420,7 @@ function threshClass(disk) {
 
 function threshTooltip(disk) {
   const t = DISK_THRESHOLDS[disk.type] || DISK_THRESHOLDS.HDD;
-  return `${disk.type} ${T.thresholdsLabel} — ${T.warm}: ${toDisplay(t.warm)}${unitLabel()} · ${T.hot}: ${toDisplay(t.hot)}${unitLabel()} · ${T.critical}: ${toDisplay(t.critical)}${unitLabel()}`;
+  return T.thresholdsLabel.replace('{type}', disk.type) + ` — ${T.warm}: ${toDisplay(t.warm)}${unitLabel()} · ${T.hot}: ${toDisplay(t.hot)}${unitLabel()} · ${T.critical}: ${toDisplay(t.critical)}${unitLabel()}`;
 }
 
 function toDisplay(c) { return unit === 'F' ? Math.round(c * 9 / 5 + 32) : c; }

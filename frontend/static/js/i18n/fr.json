@@ -30,7 +30,7 @@
   "errorLoadingData": "Erreur lors du chargement des données du serveur.",
   "scanning": "analyse en cours…",
   "scanned": "analysé",
-  "thresholdsLabel": "seuils",
+  "thresholdsLabel": "seuils {type}",
   "normal": "Normal",
   "warm": "Tiède",
   "hot": "Chaud",

@@ -30,7 +30,7 @@
   "errorLoadingData": "Fehler beim Laden der Daten vom Server.",
   "scanning": "wird gescannt…",
   "scanned": "gescannt",
-  "thresholdsLabel": "Schwellenwerte",
+  "thresholdsLabel": "{type} Schwellenwerte",
   "normal": "Normal",
   "warm": "Warm",
   "hot": "Heiß",
