@@ -420,7 +420,7 @@ function threshClass(disk) {
 
 function threshTooltip(disk) {
   const t = DISK_THRESHOLDS[disk.type] || DISK_THRESHOLDS.HDD;
-  return `${disk.type} thresholds — ${T.warm}: ${toDisplay(t.warm)}${unitLabel()} · ${T.hot}: ${toDisplay(t.hot)}${unitLabel()} · ${T.critical}: ${toDisplay(t.critical)}${unitLabel()}`;
+  return `${disk.type} ${T.thresholdsLabel} — ${T.warm}: ${toDisplay(t.warm)}${unitLabel()} · ${T.hot}: ${toDisplay(t.hot)}${unitLabel()} · ${T.critical}: ${toDisplay(t.critical)}${unitLabel()}`;
 }
 
 function toDisplay(c) { return unit === 'F' ? Math.round(c * 9 / 5 + 32) : c; }
@@ -547,7 +547,7 @@ function renderFanPanel() {
     card.innerHTML += `
       <div style="font-size:13px; font-weight:500; color:var(--color-text-primary); margin-top:4px;">${label}</div>
       <div id="fan-pct-${f.fan_id}" style="font-size:20px; font-weight:500; color:var(--color-text-primary);">${Math.round(pct * 100)}%</div>
-      <div id="fan-rpm-${f.fan_id}" style="font-size:12px; color:var(--color-text-secondary);">${rpm === 0 ? 'stopped' : rpm + ' rpm'}</div>`;
+      <div id="fan-rpm-${f.fan_id}" style="font-size:12px; color:var(--color-text-secondary);">${rpm === 0 ? T.fanStopped : rpm + ' rpm'}</div>`;
 
     panel.appendChild(card);
   });
