@@ -2,7 +2,7 @@ name: Build and push Docker image
 
 on:
   push:
-    branches: [ "main", "dev" ]
+    branches: [ "main", "dev", "testing" ]
     tags: [ "v*" ]
 
 env:
@@ -31,6 +31,7 @@ jobs:
           tags: |
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
             type=raw,value=dev,enable=${{ github.ref == 'refs/heads/dev' }}
+            type=raw,value=testing,enable=${{ github.ref == 'refs/heads/testing' }}
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
 
