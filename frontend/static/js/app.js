@@ -406,6 +406,7 @@ async function _refreshSessionIfActive() {
       localStorage.setItem('fd_token', token);
     }
   }
+  console.log('Session refresh check: idle for', Math.round(idleMs / 1000), 'seconds');
 }
 // Start and stop polling for dashboard snapshot and session refresh
 function startPolling() {
