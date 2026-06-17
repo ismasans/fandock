@@ -16,7 +16,7 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 SECRET_KEY = "CHANGE_ME_IN_PRODUCTION"  # override via env var FANDOCK_SECRET in main.py
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60  # time until token expires and login session ends in minutes
+ACCESS_TOKEN_EXPIRE_MINUTES = 15  # session timeout after inactivity in minutes
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/token")
 
@@ -61,6 +61,11 @@ async def login(req: LoginRequest):
         first_run=cfg.first_run,
         is_default_password=verify_password("fandock", cfg.password_hash)
     )
+
+# Refresh token endpoint (used by frontend fetch)
+@router.post("/refresh", response_model=TokenResponse)
+async def refresh_token(_user: str = Depends(get_current_user)):
+    return TokenResponse(access_token=_create_token(_user))
 
 
 @router.post("/change-password")

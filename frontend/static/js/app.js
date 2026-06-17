@@ -386,8 +386,38 @@ document.addEventListener('click', e => { if (!e.target.closest('.user-menu')) t
 
 // ── Polling ───────────────────────────────────────────────────────────────────
 const POLL_INTERVAL_MS = 5000;
-function startPolling() { fetchSnapshot(); pollTimer = setInterval(fetchSnapshot, POLL_INTERVAL_MS); }
-function stopPolling()  { clearInterval(pollTimer); }
+const SESSION_REFRESH_INTERVAL_MS = 5 * 60 * 1000; // check every 5 min
+let _lastActivity = Date.now();
+let _sessionRefreshTimer = null;
+
+// Update last activity timestamp on user interaction
+function _markActivity() { _lastActivity = Date.now(); }
+['mousemove', 'mousedown', 'keydown', 'click', 'touchstart'].forEach(evt => {
+  document.addEventListener(evt, _markActivity, { passive: true });
+});
+
+// Refresh session if user is active
+async function _refreshSessionIfActive() {
+  const idleMs = Date.now() - _lastActivity;
+  if (idleMs < SESSION_REFRESH_INTERVAL_MS && token) {
+    const data = await api('POST', '/auth/refresh');
+    if (data && data.access_token) {
+      token = data.access_token;
+      localStorage.setItem('fd_token', token);
+    }
+  }
+}
+// Start and stop polling for dashboard snapshot and session refresh
+function startPolling() {
+  fetchSnapshot();
+  pollTimer = setInterval(fetchSnapshot, POLL_INTERVAL_MS);
+  _sessionRefreshTimer = setInterval(_refreshSessionIfActive, SESSION_REFRESH_INTERVAL_MS);
+}
+// Stop polling for dashboard snapshot and session refresh
+function stopPolling() {
+  clearInterval(pollTimer);
+  clearInterval(_sessionRefreshTimer);
+}
 
 async function fetchSnapshot() {
   const data = await api('GET', '/dashboard/snapshot');
