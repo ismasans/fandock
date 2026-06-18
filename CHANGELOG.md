@@ -2,7 +2,7 @@
 
 All notable changes to FanDock will be documented in this file.
 
-## [0.1.1] - 2026-06-XX
+## [0.1.1] - 2026-06-15
 
 ### Added
 - Full i18n system — all UI strings are now translatable
