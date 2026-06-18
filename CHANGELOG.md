@@ -2,6 +2,21 @@
 
 All notable changes to FanDock will be documented in this file.
 
+## [0.1.1] - 2026-06-XX
+
+### Added
+- Full i18n system — all UI strings are now translatable
+- English, Spanish, French and German translations included
+- New languages are detected automatically — contributing a translation only requires adding a JSON file and opening a PR
+- Language preference saved per user, with browser language as default
+- TrueNAS SCALE Community Edition installation guide in README
+- Screenshots (Dashboard, Curves, Settings) in README
+- "Adding a language" contributor guide in README
+
+### Changed
+- All hardcoded UI strings moved to translation keys
+- Settings now show full language names instead of country codes
+
 ## [0.1.0] - 2026-06-10
 
 ### Added
