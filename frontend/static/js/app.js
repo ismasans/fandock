@@ -385,6 +385,7 @@ function toggleUserMenu(force) {
 document.addEventListener('click', e => { if (!e.target.closest('.user-menu')) toggleUserMenu(false); });
 
 // ── Session timeout ──────────────────────────────────────────────────────────
+const POLL_INTERVAL_MS = 5000;
 const SESSION_TIMEOUT_MS = 5 * 60 * 1000; // 5 min of inactivity → logout
 const SESSION_REFRESH_MARGIN_MS = 60 * 1000; // refresh token 1 min before it would expire server-side
 let _idleTimer = null;
