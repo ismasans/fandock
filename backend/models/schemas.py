@@ -79,6 +79,7 @@ class AppConfig(BaseModel):
     poll_interval_seconds: int = Field(default=5, ge=5, le=300)
     unmonitored_disks: list[str] = Field(default_factory=list)
     unmonitored_fans: list[str] = Field(default_factory=list)
+    known_disk_serials: list[str] = Field(default_factory=list)
     first_run: bool = True
 
 

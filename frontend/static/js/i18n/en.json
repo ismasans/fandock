@@ -106,5 +106,12 @@
   "resetConfiguration": "Reset configuration",
   "onboardImportant": "Important:",
   "language": "Language",
-  "languageDesc": "Choose the interface language"
+  "languageDesc": "Choose the interface language",
+  "hwChangeTitle": "Hardware change detected",
+  "hwChangeDesc": "FanDock detected changes in your disk configuration since the last scan:",
+  "hwNewDisk": "New disk",
+  "hwRemovedDisk": "Disk no longer detected",
+  "ignore": "Ignore",
+  "reviewChanges": "Review changes",
+  "rerunWizard": "Re-run setup wizard"
 }

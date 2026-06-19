@@ -106,5 +106,12 @@
   "resetConfiguration": "Restablecer configuración",
   "onboardImportant": "Importante:",
   "language": "Idioma",
-  "languageDesc": "Elige el idioma de la interfaz"
+  "languageDesc": "Elige el idioma de la interfaz",
+  "hwChangeTitle": "Cambio de hardware detectado",
+  "hwChangeDesc": "FanDock ha detectado cambios en la configuración de discos desde el último escaneo:",
+  "hwNewDisk": "Disco nuevo",
+  "hwRemovedDisk": "Disco ya no detectado",
+  "ignore": "Ignorar",
+  "reviewChanges": "Revisar cambios",
+  "rerunWizard": "Volver a ejecutar el asistente"
 }
