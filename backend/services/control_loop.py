@@ -21,7 +21,7 @@ _known_disks: list[DiskInfo] = []
 _known_fans: list = []
 _test_in_progress: bool = False
 _hardware_change: dict = {"pending": False, "new_disks": [], "removed_disks": []}
-_HARDWARE_RESCAN_EVERY_N_TICKS = 30  # ~5 min at 10s poll interval
+_HARDWARE_RESCAN_EVERY_N_TICKS = 3  # ~30s at 10s poll interval
 
 async def get_last_snapshot() -> dict:
     return _last_snapshot

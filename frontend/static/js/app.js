@@ -204,6 +204,7 @@ async function doLogin() {
 
 async function showWizard(isReset) {
   document.getElementById('loginView').classList.add('hidden');
+  document.getElementById('mainView').classList.add('hidden');
   document.getElementById('wizardView').classList.remove('hidden');
   document.getElementById('defaultCredsHint').style.display = 'none';
   if (isReset) {
@@ -264,7 +265,7 @@ function buildWizardLists() {
     row.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:8px;';
     row.innerHTML = `
       <code style="font-size:12px;color:var(--color-text-secondary);min-width:80px;">${f.fan_id}</code>
-      <input class="cfg-input" id="wizFan-${i}" placeholder="e.g. Front intake" value="${f.friendly_name || ''}">
+      <input class="cfg-input" id="wizFan-${i}" placeholder="e.g. Front intake" value="${(settingsData && settingsData.fans && settingsData.fans.find(fc => fc.fan_id === f.fan_id)?.friendly_name) || f.friendly_name || ''}">
       <button class="test-btn" onclick="testFan('${f.fan_id}', this)"><i class="ti ti-player-play" style="font-size:11px;margin-right:3px;"></i>${T.test}</button>`;
     fanList.appendChild(row);
   });
@@ -282,6 +283,7 @@ async function wizardFinish() {
   const hint = document.getElementById('defaultCredsHint');
   if (hint) hint.style.display = 'none';
   document.getElementById('wizardView').classList.add('hidden');
+  document.getElementById('mainView').classList.remove('hidden');
   showApp();
 }
 
