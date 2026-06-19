@@ -106,5 +106,12 @@
   "resetConfiguration": "Konfiguration zurücksetzen",
   "onboardImportant": "Wichtig:",
   "language": "Sprache",
-  "languageDesc": "Wählen Sie die Sprache der Benutzeroberfläche"
+  "languageDesc": "Wählen Sie die Sprache der Benutzeroberfläche",
+  "hwChangeTitle": "Hardwareänderung erkannt",
+  "hwChangeDesc": "FanDock hat seit dem letzten Scan Änderungen in der Festplattenkonfiguration erkannt:",
+  "hwNewDisk": "Neue Festplatte",
+  "hwRemovedDisk": "Festplatte nicht mehr erkannt",
+  "ignore": "Ignorieren",
+  "reviewChanges": "Änderungen anzeigen",
+  "rerunWizard": "Einrichtungsassistent erneut ausführen"
 }

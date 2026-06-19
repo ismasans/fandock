@@ -161,6 +161,7 @@ function applyI18n() {
   s('modalLabelConfirmPwd', T.confirmPassword);
   s('modalBtnCancel', T.cancel);
   s('modalBtnUpdatePwd', T.updatePassword);
+  s('btnRerunWizardLabel', T.rerunWizard);
   const langSel = document.getElementById('langSelect');
   if (langSel) {
     if (langSel.options.length === 0) {
@@ -248,7 +249,7 @@ function buildWizardLists() {
       </div>
       <div style="display:flex;align-items:center;gap:10px;">
         <span class="disk-type-badge">${d.type}</span>
-        <input class="cfg-input" id="wizDisk-${i}" placeholder="e.g. IronWolf 1" value="${d.friendly_name || ''}" style="flex:1;">
+        <input class="cfg-input" id="wizDisk-${i}" placeholder="e.g. IronWolf 1" value="${(settingsData && settingsData.disk_friendly_names && (settingsData.disk_friendly_names[d.serial] || settingsData.disk_friendly_names[d.device])) || d.friendly_name || ''}" style="flex:1;">
       </div>`;
     diskList.appendChild(row);
   });
@@ -416,7 +417,9 @@ async function _periodicRefresh() {
 
 function startPolling() {
   fetchSnapshot();
+  checkHardwareChanges();
   pollTimer = setInterval(fetchSnapshot, POLL_INTERVAL_MS);
+  setInterval(checkHardwareChanges, POLL_INTERVAL_MS * 6); // every ~30s
   _resetIdleTimer();
   // Refresh the JWT periodically so it never expires while the idle timer is still running
   _refreshTimer = setInterval(_periodicRefresh, SESSION_TIMEOUT_MS - SESSION_REFRESH_MARGIN_MS);
@@ -810,6 +813,48 @@ async function saveCurve() {
 
 async function discardCurve() { const fan = activeFan(); delete curves[fan]; await loadCurve(fan); }
 document.getElementById('fanSelect').onchange = () => { loadCurve(activeFan()); };
+
+// ── Hardware change detection ───────────────────────────────────────────────
+async function checkHardwareChanges() {
+  const data = await api('GET', '/settings/hardware-changes');
+  if (data && data.pending) showHardwareChangeModal(data);
+}
+
+function showHardwareChangeModal(data) {
+  document.getElementById('hwChangeTitle').textContent = T.hwChangeTitle;
+  document.getElementById('hwChangeDesc').textContent = T.hwChangeDesc;
+  const list = document.getElementById('hwChangeList');
+  list.innerHTML = '';
+  (data.new_disks || []).forEach(d => {
+    const li = document.createElement('li');
+    li.textContent = `${T.hwNewDisk}: ${d.model || d.device} (${d.serial || ''})`;
+    list.appendChild(li);
+  });
+  (data.removed_disks || []).forEach(serial => {
+    const li = document.createElement('li');
+    li.textContent = `${T.hwRemovedDisk}: ${serial}`;
+    list.appendChild(li);
+  });
+  document.getElementById('btnHwIgnore').textContent = T.ignore;
+  document.getElementById('btnHwReview').textContent = T.reviewChanges;
+  document.getElementById('hwChangeModal').classList.remove('hidden');
+}
+
+function closeHwChangeModal() {
+  document.getElementById('hwChangeModal').classList.add('hidden');
+}
+
+async function ignoreHardwareChanges() {
+  await api('POST', '/settings/acknowledge-hardware-changes');
+  closeHwChangeModal();
+  await forceRefresh();
+}
+
+async function reviewHardwareChanges() {
+  await api('POST', '/settings/dismiss-hardware-changes');
+  closeHwChangeModal();
+  await showWizard(true); // reset=true → pre-filled wizard, skips password step
+}
 
 // ── Settings ──────────────────────────────────────────────────────────────────
 async function loadSettings() {

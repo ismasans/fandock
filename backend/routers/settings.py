@@ -61,6 +61,7 @@ async def hardware_scan(_user: str = Depends(get_current_user)) -> HardwareScanR
                     CurvePoint(temp_c=55, pwm_pct=100),
                 ],
             ))
+    cfg.known_disk_serials = [d.serial for d in disks if d.serial]
     save_config(cfg)
     control_loop._known_disks.clear()
     control_loop._known_disks.extend(disks)
@@ -124,6 +125,37 @@ async def update_global_settings(payload: GlobalSettingsPayload, _user: str = De
 async def fan_diagnostic(_user: str = Depends(get_current_user)):
     return diagnose_fan_hardware()
 
+
+@router.get("/hardware-changes")
+async def hardware_changes(_user: str = Depends(get_current_user)):
+    return await control_loop.get_hardware_change_status()
+
+
+@router.post("/acknowledge-hardware-changes")
+async def acknowledge_hardware_changes(_user: str = Depends(get_current_user)):
+    cfg = load_config()
+    disks = await scan_disks()
+    cfg.known_disk_serials = [d.serial for d in disks if d.serial]
+    # Remove friendly names for disks that no longer exist
+    current_serials = set(cfg.known_disk_serials)
+    cfg.disk_friendly_names = {
+        k: v for k, v in cfg.disk_friendly_names.items() if k in current_serials
+    }
+    save_config(cfg)
+    control_loop._known_disks.clear()
+    control_loop._known_disks.extend(disks)
+    control_loop._hardware_change = {"pending": False, "new_disks": [], "removed_disks": []}
+    return {"ok": True}
+
+
+@router.post("/dismiss-hardware-changes")
+async def dismiss_hardware_changes_for_wizard(_user: str = Depends(get_current_user)):
+    """Called when the user chooses 'Review changes' — clears the pending flag
+    so the modal doesn't reappear, without touching known_disk_serials yet
+    (the wizard flow will update it on finish)."""
+    control_loop._hardware_change = {"pending": False, "new_disks": [], "removed_disks": []}
+    return {"ok": True}
+
 @router.get("/languages")
 async def available_languages():
     import os, json
@@ -140,3 +172,16 @@ async def available_languages():
                 name = code.upper()
             languages.append({"code": code, "name": name})
     return {"languages": languages}
+
+
+# ⚠️ ⚠️ ⚠️
+# ⚠️ TEMPORARY — for testing hardware change detection. Remove before merging to main.
+@router.post("/debug/simulate-disk-change")
+async def simulate_disk_change(_user: str = Depends(get_current_user)):
+    cfg = load_config()
+    if cfg.known_disk_serials:
+        cfg.known_disk_serials = cfg.known_disk_serials[:-1]
+        cfg.known_disk_serials.append("FAKE-SERIAL-TEST-123")
+        save_config(cfg)
+    return {"ok": True, "known_disk_serials": cfg.known_disk_serials}
+# ⚠️ ⚠️ ⚠️
