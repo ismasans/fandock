@@ -129,9 +129,10 @@ This resets the password to `fandock` and triggers the first-run wizard on next 
 
 | Version | Feature |
 |---------|---------|
-| v1.0 | Core fan control |
-| v1.1 | Email alerts via SMTP |
-| v1.2 | Extended NVMe support |
+| v0.3.0 | Bug fixes and polish based on real-world usage |
+| v1.0.0 | Stable release |
+| v1.1.0 | Email alerts via SMTP |
+| v1.2.0 | Extended NVMe support |
 
 ## Adding a language
 
