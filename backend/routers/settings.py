@@ -172,16 +172,3 @@ async def available_languages():
                 name = code.upper()
             languages.append({"code": code, "name": name})
     return {"languages": languages}
-
-
-# ⚠️ ⚠️ ⚠️
-# ⚠️ TEMPORARY — for testing hardware change detection. Remove before merging to main.
-@router.post("/debug/simulate-disk-change")
-async def simulate_disk_change(_user: str = Depends(get_current_user)):
-    cfg = load_config()
-    if cfg.known_disk_serials:
-        cfg.known_disk_serials = cfg.known_disk_serials[:-1]
-        cfg.known_disk_serials.append("FAKE-SERIAL-TEST-123")
-        save_config(cfg)
-    return {"ok": True, "known_disk_serials": cfg.known_disk_serials}
-# ⚠️ ⚠️ ⚠️
