@@ -239,6 +239,7 @@ async function wizardSetPassword() {
 function buildWizardLists() {
   const diskList = document.getElementById('wizDiskList');
   diskList.innerHTML = '';
+  serverDisks.sort((a, b) => a.serial.localeCompare(b.serial));
   serverDisks.forEach((d, i) => {
     const row = document.createElement('div');
     row.style.cssText = 'display:flex;flex-direction:column;gap:6px;margin-bottom:12px;padding:.75rem;background:var(--color-background-secondary);border-radius:var(--border-radius-md);';
@@ -260,6 +261,7 @@ function buildWizardLists() {
     fanList.innerHTML = `<p style="font-size:12px;color:var(--color-text-tertiary);">${T.noFansDetected}</p>`;
     return;
   }
+  serverFans.sort((a, b) => a.fan_id.localeCompare(b.fan_id));
   serverFans.forEach((f, i) => {
     const row = document.createElement('div');
     row.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:8px;';
@@ -272,12 +274,14 @@ function buildWizardLists() {
 }
 
 async function wizardFinish() {
+  serverDisks.sort((a, b) => a.serial.localeCompare(b.serial));
+  serverFans.sort((a, b) => a.fan_id.localeCompare(b.fan_id));
   const names = {};
   serverDisks.forEach((d, i) => { const el = document.getElementById(`wizDisk-${i}`); if (el && el.value) names[d.serial] = el.value; });
   if (Object.keys(names).length) await api('PUT', '/settings/friendly-names', { names });
   for (let i = 0; i < serverFans.length; i++) {
     const el = document.getElementById(`wizFan-${i}`);
-    if (el && el.value) await api('PATCH', `/settings/fans/${serverFans[i].fan_id}`, { friendly_name: el.value });
+    if (el) await api('PATCH', `/settings/fans/${serverFans[i].fan_id}`, { friendly_name: el.value || serverFans[i].friendly_name || serverFans[i].fan_id });
   }
   await api('POST', '/auth/complete-setup');
   const hint = document.getElementById('defaultCredsHint');
