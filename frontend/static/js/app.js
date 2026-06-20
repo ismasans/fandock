@@ -289,7 +289,8 @@ async function wizardFinish() {
   if (hint) hint.style.display = 'none';
   document.getElementById('wizardView').classList.add('hidden');
   document.getElementById('mainView').classList.remove('hidden');
-  showApp();
+  await showApp();
+  await forceRefresh();
 }
 
 document.getElementById('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
