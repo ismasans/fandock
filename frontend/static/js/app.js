@@ -161,6 +161,7 @@ function applyI18n() {
   s('modalLabelConfirmPwd', T.confirmPassword);
   s('modalBtnCancel', T.cancel);
   s('modalBtnUpdatePwd', T.updatePassword);
+  s('btnRerunWizardLabel', T.rerunWizard);
   const langSel = document.getElementById('langSelect');
   if (langSel) {
     if (langSel.options.length === 0) {
@@ -203,13 +204,14 @@ async function doLogin() {
 
 async function showWizard(isReset) {
   document.getElementById('loginView').classList.add('hidden');
+  document.getElementById('mainView').classList.add('hidden');
   document.getElementById('wizardView').classList.remove('hidden');
   document.getElementById('defaultCredsHint').style.display = 'none';
   if (isReset) {
     document.getElementById('wizardStep1').classList.add('hidden');
     document.getElementById('wizardStep2').classList.remove('hidden');
     const scan = await api('POST', '/settings/scan');
-    if (scan) { serverDisks = scan.disks; allDisks = scan.disks; allFans = scan.fans; serverFans = scan.fans; }
+    if (scan) { allDisks = scan.disks; allFans = scan.fans; }
     buildWizardLists();
   } else {
     document.getElementById('wizardStep1').classList.remove('hidden');
@@ -228,7 +230,7 @@ async function wizardSetPassword() {
   const data = await api('POST', '/auth/change-password', { current_password: currentPwd, new_password: next });
   if (!data) { err.textContent = T.pwdChangeError; err.style.display = 'block'; return; }
   const scan = await api('POST', '/settings/scan');
-  if (scan) { serverDisks = scan.disks; allDisks = scan.disks; serverFans = scan.fans; allFans = scan.fans; }
+  if (scan) { allDisks = scan.disks; allFans = scan.fans; }
   document.getElementById('wizardStep1').classList.add('hidden');
   document.getElementById('wizardStep2').classList.remove('hidden');
   buildWizardLists();
@@ -237,7 +239,8 @@ async function wizardSetPassword() {
 function buildWizardLists() {
   const diskList = document.getElementById('wizDiskList');
   diskList.innerHTML = '';
-  serverDisks.forEach((d, i) => {
+  allDisks.sort((a, b) => a.serial.localeCompare(b.serial));
+  allDisks.forEach((d, i) => {
     const row = document.createElement('div');
     row.style.cssText = 'display:flex;flex-direction:column;gap:6px;margin-bottom:12px;padding:.75rem;background:var(--color-background-secondary);border-radius:var(--border-radius-md);';
     row.innerHTML = `
@@ -248,40 +251,46 @@ function buildWizardLists() {
       </div>
       <div style="display:flex;align-items:center;gap:10px;">
         <span class="disk-type-badge">${d.type}</span>
-        <input class="cfg-input" id="wizDisk-${i}" placeholder="e.g. IronWolf 1" value="${d.friendly_name || ''}" style="flex:1;">
+        <input class="cfg-input" id="wizDisk-${i}" placeholder="e.g. IronWolf 1" value="${(settingsData && settingsData.disk_friendly_names && (settingsData.disk_friendly_names[d.serial] || settingsData.disk_friendly_names[d.device])) || d.friendly_name || ''}" style="flex:1;">
       </div>`;
     diskList.appendChild(row);
   });
   const fanList = document.getElementById('wizFanList');
   fanList.innerHTML = '';
-  if (serverFans.length === 0) {
+  if (allFans.length === 0) {
     fanList.innerHTML = `<p style="font-size:12px;color:var(--color-text-tertiary);">${T.noFansDetected}</p>`;
     return;
   }
-  serverFans.forEach((f, i) => {
+  allFans.sort((a, b) => a.fan_id.localeCompare(b.fan_id));
+  allFans.forEach((f, i) => {
     const row = document.createElement('div');
     row.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:8px;';
     row.innerHTML = `
       <code style="font-size:12px;color:var(--color-text-secondary);min-width:80px;">${f.fan_id}</code>
-      <input class="cfg-input" id="wizFan-${i}" placeholder="e.g. Front intake" value="${f.friendly_name || ''}">
+      <input class="cfg-input" id="wizFan-${i}" placeholder="e.g. Front intake" value="${(settingsData && settingsData.fans && settingsData.fans.find(fc => fc.fan_id === f.fan_id)?.friendly_name) || f.friendly_name || ''}">
       <button class="test-btn" onclick="testFan('${f.fan_id}', this)"><i class="ti ti-player-play" style="font-size:11px;margin-right:3px;"></i>${T.test}</button>`;
     fanList.appendChild(row);
   });
 }
 
 async function wizardFinish() {
+  allDisks.sort((a, b) => a.serial.localeCompare(b.serial));
+  allFans.sort((a, b) => a.fan_id.localeCompare(b.fan_id));
   const names = {};
-  serverDisks.forEach((d, i) => { const el = document.getElementById(`wizDisk-${i}`); if (el && el.value) names[d.serial] = el.value; });
+  allDisks.forEach((d, i) => { const el = document.getElementById(`wizDisk-${i}`); if (el && el.value) names[d.serial] = el.value; });
   if (Object.keys(names).length) await api('PUT', '/settings/friendly-names', { names });
-  for (let i = 0; i < serverFans.length; i++) {
+  allFans.sort((a, b) => a.fan_id.localeCompare(b.fan_id));
+  for (let i = 0; i < allFans.length; i++) {
     const el = document.getElementById(`wizFan-${i}`);
-    if (el && el.value) await api('PATCH', `/settings/fans/${serverFans[i].fan_id}`, { friendly_name: el.value });
+    if (el) await api('PATCH', `/settings/fans/${allFans[i].fan_id}`, { friendly_name: el.value || allFans[i].friendly_name || allFans[i].fan_id });
   }
   await api('POST', '/auth/complete-setup');
   const hint = document.getElementById('defaultCredsHint');
   if (hint) hint.style.display = 'none';
   document.getElementById('wizardView').classList.add('hidden');
-  showApp();
+  document.getElementById('mainView').classList.remove('hidden');
+  await showApp();
+  await forceRefresh();
 }
 
 document.getElementById('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
@@ -384,10 +393,50 @@ function toggleUserMenu(force) {
 }
 document.addEventListener('click', e => { if (!e.target.closest('.user-menu')) toggleUserMenu(false); });
 
-// ── Polling ───────────────────────────────────────────────────────────────────
+// ── Session timeout ──────────────────────────────────────────────────────────
 const POLL_INTERVAL_MS = 5000;
-function startPolling() { fetchSnapshot(); pollTimer = setInterval(fetchSnapshot, POLL_INTERVAL_MS); }
-function stopPolling()  { clearInterval(pollTimer); }
+const SESSION_TIMEOUT_MS = 5 * 60 * 1000; // 5 min of inactivity → logout
+const SESSION_REFRESH_MARGIN_MS = 60 * 1000; // refresh token 1 min before it would expire server-side
+let _idleTimer = null;
+let _refreshTimer = null;
+
+function _resetIdleTimer() {
+  if (!token) return;
+  clearTimeout(_idleTimer);
+  _idleTimer = setTimeout(_onSessionTimeout, SESSION_TIMEOUT_MS);
+}
+
+function _onSessionTimeout() {
+  if (token) doLogout();
+}
+
+['mousemove', 'mousedown', 'keydown', 'click', 'touchstart'].forEach(evt => {
+  document.addEventListener(evt, _resetIdleTimer, { passive: true });
+});
+
+async function _periodicRefresh() {
+  if (!token) return;
+  const data = await api('POST', '/auth/refresh');
+  if (data && data.access_token) {
+    token = data.access_token;
+    localStorage.setItem('fd_token', token);
+  }
+}
+
+function startPolling() {
+  fetchSnapshot();
+  checkHardwareChanges();
+  pollTimer = setInterval(fetchSnapshot, POLL_INTERVAL_MS);
+  setInterval(checkHardwareChanges, POLL_INTERVAL_MS * 6); // every ~30s
+  _resetIdleTimer();
+  // Refresh the JWT periodically so it never expires while the idle timer is still running
+  _refreshTimer = setInterval(_periodicRefresh, SESSION_TIMEOUT_MS - SESSION_REFRESH_MARGIN_MS);
+}
+function stopPolling() {
+  clearInterval(pollTimer);
+  clearInterval(_refreshTimer);
+  clearTimeout(_idleTimer);
+}
 
 async function fetchSnapshot() {
   const data = await api('GET', '/dashboard/snapshot');
@@ -420,7 +469,7 @@ function threshClass(disk) {
 
 function threshTooltip(disk) {
   const t = DISK_THRESHOLDS[disk.type] || DISK_THRESHOLDS.HDD;
-  return `${disk.type} thresholds — ${T.warm}: ${toDisplay(t.warm)}${unitLabel()} · ${T.hot}: ${toDisplay(t.hot)}${unitLabel()} · ${T.critical}: ${toDisplay(t.critical)}${unitLabel()}`;
+  return T.thresholdsLabel.replace('{type}', disk.type) + ` — ${T.warm}: ${toDisplay(t.warm)}${unitLabel()} · ${T.hot}: ${toDisplay(t.hot)}${unitLabel()} · ${T.critical}: ${toDisplay(t.critical)}${unitLabel()}`;
 }
 
 function toDisplay(c) { return unit === 'F' ? Math.round(c * 9 / 5 + 32) : c; }
@@ -446,22 +495,113 @@ function renderDiskGrid() {
   });
 }
 
+const _fanRotations = {};
+let _fanAnimFrame = null;
+let _fanLastTs = null;
+let _fanDisplayedRpms = {};
+
+function _fanAnimate(ts) {
+  if (!_fanLastTs) _fanLastTs = ts;
+  const dt = Math.min((ts - _fanLastTs) / 1000, 0.05);
+  _fanLastTs = ts;
+  serverFans.forEach(f => {
+    if (!_fanRotations[f.fan_id]) _fanRotations[f.fan_id] = 0;
+    const rpm = f.current_rpm || 0;
+    // Initialize displayed rpm if first time
+    if (_fanDisplayedRpms[f.fan_id] == null) _fanDisplayedRpms[f.fan_id] = rpm;
+    // Smoothly approach the target rpm using an exponential smoothing (time constant tau)
+    const tau = 1; // seconds — lower = quicker response, higher = slower deceleration
+    const alpha = 1 - Math.exp(-dt / tau);
+    _fanDisplayedRpms[f.fan_id] += (rpm - _fanDisplayedRpms[f.fan_id]) * alpha;
+    const usedRpm = _fanDisplayedRpms[f.fan_id];
+    _fanRotations[f.fan_id] = (_fanRotations[f.fan_id] + usedRpm * dt) % 360;
+    const icon = document.getElementById(`fan-icon-${f.fan_id}`);
+    if (icon) icon.setAttribute('transform', `translate(70,70) rotate(${_fanRotations[f.fan_id].toFixed(1)})`);
+  });
+  _fanAnimFrame = requestAnimationFrame(_fanAnimate);
+}
+
+function _fanArcD(pct) {
+  const R = 52, CX = 70, CY = 70;
+  const GAP = 60, ARC = 300;
+  const startAngle = 90 + GAP / 2;
+  const sweep = ARC * Math.max(0.001, Math.min(1, pct));
+  const toRad = a => a * Math.PI / 180;
+  const pt = a => ({ x: CX + R * Math.cos(toRad(a)), y: CY + R * Math.sin(toRad(a)) });
+  const s = pt(startAngle), e = pt(startAngle + sweep);
+  return `M ${s.x.toFixed(2)} ${s.y.toFixed(2)} A ${R} ${R} 0 ${sweep > 180 ? 1 : 0} 1 ${e.x.toFixed(2)} ${e.y.toFixed(2)}`;
+}
+
 function renderFanPanel() {
   const panel = document.getElementById('fanPanel');
+  if (_fanAnimFrame) { cancelAnimationFrame(_fanAnimFrame); _fanAnimFrame = null; _fanLastTs = null; }
   panel.innerHTML = '';
+  panel.style.cssText = 'display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:12px;';
+
+  const ns = 'http://www.w3.org/2000/svg';
   serverFans.forEach(f => {
-    const pct = Math.round(f.current_pwm / 255 * 100);
+    const pct = f.current_pwm / 255;
+    const rpm = f.current_rpm || 0;
     const label = f.friendly_name || f.fan_id;
-    const rpm = f.current_rpm != null ? `${f.current_rpm} rpm` : '';
-    const row = document.createElement('div');
-    row.className = 'fan-row';
-    row.innerHTML = `
-      <span class="fan-label">${label}</span>
-      <div class="progress-bg"><div class="progress-fill" id="bar-${f.fan_id}" style="width:${pct}%"></div></div>
-      <span class="fan-value">${pct}%</span>
-      <span class="fan-rpm">${rpm}</span>`;
-    panel.appendChild(row);
+    const R = 52, CX = 70, CY = 70, STROKE = 14;
+    const bladeR = R - STROKE - 6;
+
+    const card = document.createElement('div');
+    card.style.cssText = 'background:var(--color-background-primary); border:0.5px solid var(--color-border-tertiary); border-radius:var(--border-radius-lg); padding:1rem; display:flex; flex-direction:column; align-items:center;';
+
+    const svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', '0 0 140 140');
+    svg.setAttribute('width', '140');
+    svg.setAttribute('height', '140');
+
+    const track = document.createElementNS(ns, 'path');
+    track.setAttribute('d', _fanArcD(1));
+    track.setAttribute('fill', 'none');
+    track.setAttribute('stroke', 'var(--color-border-secondary)');
+    track.setAttribute('stroke-width', STROKE);
+    track.setAttribute('stroke-linecap', 'round');
+    svg.appendChild(track);
+
+    const fill = document.createElementNS(ns, 'path');
+    fill.id = `fan-arc-${f.fan_id}`;
+    fill.setAttribute('d', _fanArcD(pct));
+    fill.setAttribute('fill', 'none');
+    fill.setAttribute('stroke', rpm === 0 ? 'var(--color-border-tertiary)' : '#378ADD');
+    fill.setAttribute('stroke-width', STROKE);
+    fill.setAttribute('stroke-linecap', 'round');
+    svg.appendChild(fill);
+
+    const iconG = document.createElementNS(ns, 'g');
+    iconG.id = `fan-icon-${f.fan_id}`;
+    iconG.setAttribute('transform', `translate(${CX},${CY})`);
+    for (let i = 0; i < 4; i++) {
+      const blade = document.createElementNS(ns, 'ellipse');
+      blade.setAttribute('cx', (bladeR * 0.45).toFixed(1));
+      blade.setAttribute('cy', '0');
+      blade.setAttribute('rx', (bladeR * 0.45).toFixed(1));
+      blade.setAttribute('ry', (bladeR * 0.22).toFixed(1));
+      blade.setAttribute('fill', 'var(--color-text-secondary)');
+      blade.setAttribute('opacity', '0.9');
+      blade.setAttribute('transform', `rotate(${i * 90})`);
+      iconG.appendChild(blade);
+    }
+    const hub = document.createElementNS(ns, 'circle');
+    hub.setAttribute('cx', '0'); hub.setAttribute('cy', '0');
+    hub.setAttribute('r', (bladeR * 0.14).toFixed(1));
+    hub.setAttribute('fill', 'var(--color-text-primary)');
+    iconG.appendChild(hub);
+    svg.appendChild(iconG);
+    card.appendChild(svg);
+
+    card.innerHTML += `
+      <div style="font-size:13px; font-weight:500; color:var(--color-text-primary); margin-top:4px;">${label}</div>
+      <div id="fan-pct-${f.fan_id}" style="font-size:20px; font-weight:500; color:var(--color-text-primary);">${Math.round(pct * 100)}%</div>
+      <div id="fan-rpm-${f.fan_id}" style="font-size:12px; color:var(--color-text-secondary);">${rpm === 0 ? T.fanStopped : rpm + ' rpm'}</div>`;
+
+    panel.appendChild(card);
   });
+
+  if (serverFans.length > 0) requestAnimationFrame(_fanAnimate);
 }
 
 function showCriticalBanner() {
@@ -681,6 +821,48 @@ async function saveCurve() {
 
 async function discardCurve() { const fan = activeFan(); delete curves[fan]; await loadCurve(fan); }
 document.getElementById('fanSelect').onchange = () => { loadCurve(activeFan()); };
+
+// ── Hardware change detection ───────────────────────────────────────────────
+async function checkHardwareChanges() {
+  const data = await api('GET', '/settings/hardware-changes');
+  if (data && data.pending) showHardwareChangeModal(data);
+}
+
+function showHardwareChangeModal(data) {
+  document.getElementById('hwChangeTitle').textContent = T.hwChangeTitle;
+  document.getElementById('hwChangeDesc').textContent = T.hwChangeDesc;
+  const list = document.getElementById('hwChangeList');
+  list.innerHTML = '';
+  (data.new_disks || []).forEach(d => {
+    const li = document.createElement('li');
+    li.textContent = `${T.hwNewDisk}: ${d.model || d.device} (${d.serial || ''})`;
+    list.appendChild(li);
+  });
+  (data.removed_disks || []).forEach(serial => {
+    const li = document.createElement('li');
+    li.textContent = `${T.hwRemovedDisk}: ${serial}`;
+    list.appendChild(li);
+  });
+  document.getElementById('btnHwIgnore').textContent = T.ignore;
+  document.getElementById('btnHwReview').textContent = T.reviewChanges;
+  document.getElementById('hwChangeModal').classList.remove('hidden');
+}
+
+function closeHwChangeModal() {
+  document.getElementById('hwChangeModal').classList.add('hidden');
+}
+
+async function ignoreHardwareChanges() {
+  await api('POST', '/settings/acknowledge-hardware-changes');
+  closeHwChangeModal();
+  await forceRefresh();
+}
+
+async function reviewHardwareChanges() {
+  await api('POST', '/settings/dismiss-hardware-changes');
+  closeHwChangeModal();
+  await showWizard(true); // reset=true → pre-filled wizard, skips password step
+}
 
 // ── Settings ──────────────────────────────────────────────────────────────────
 async function loadSettings() {

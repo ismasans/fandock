@@ -2,6 +2,29 @@
 
 All notable changes to FanDock will be documented in this file.
 
+## [0.2.0] - 2026-06-20
+
+### Added
+- Dashboard fan widget: speedometer-style gauge with rotating fan icon
+- Fan rotation speed proportional to RPM with smooth deceleration on stop
+- Session timeout after 5 minutes of inactivity with automatic token refresh while active
+- Hardware change detection: modal notification when disks are added or removed
+- "Review changes" option in hardware change modal relaunches pre-filled setup wizard
+- "Re-run setup wizard" button in Settings
+- French and German translations
+
+### Changed
+- i18n system migrated from JS objects to JSON files — new languages only require a JSON file PR
+- Language auto-detected from browser, overridable in Settings
+- Toggle contrast improved in light mode
+- Fan widget replaces horizontal progress bars in dashboard
+
+### Fixed
+- Hardcoded UI strings moved to translation keys (fan stopped state, threshold tooltips)
+- Wizard fan name scrambling when some fans are unmonitored — now uses allFans consistently
+- Session persists correctly while user is active
+
+
 ## [0.1.1] - 2026-06-15
 
 ### Added

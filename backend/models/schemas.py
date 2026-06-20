@@ -76,9 +76,10 @@ class AppConfig(BaseModel):
     language: Optional[str] = None
     monitor_enabled: bool = True
     control_enabled: bool = True
-    poll_interval_seconds: int = Field(default=10, ge=5, le=300)
+    poll_interval_seconds: int = Field(default=5, ge=5, le=300)
     unmonitored_disks: list[str] = Field(default_factory=list)
     unmonitored_fans: list[str] = Field(default_factory=list)
+    known_disk_serials: list[str] = Field(default_factory=list)
     first_run: bool = True
 
 

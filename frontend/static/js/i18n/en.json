@@ -30,6 +30,7 @@
   "errorLoadingData": "Error loading data from server.",
   "scanning": "scanning…",
   "scanned": "scanned",
+  "thresholdsLabel": "{type} thresholds",
   "normal": "Normal",
   "warm": "Warm",
   "hot": "Hot",
@@ -62,6 +63,7 @@
   "fanCurveEditor": "Fan curve editor",
   "temperature": "Temperature",
   "fanSpeed": "Fan speed (%)",
+  "fanStopped": "stopped",
   "warnBelow20": "Warning: minimum fan speed below 20% may reduce airflow and shorten drive lifespan.",
   "usernameLabel": "Username",
   "passwordLabel": "Password",
@@ -104,5 +106,12 @@
   "resetConfiguration": "Reset configuration",
   "onboardImportant": "Important:",
   "language": "Language",
-  "languageDesc": "Choose the interface language"
+  "languageDesc": "Choose the interface language",
+  "hwChangeTitle": "Hardware change detected",
+  "hwChangeDesc": "FanDock detected changes in your disk configuration since the last scan:",
+  "hwNewDisk": "New disk",
+  "hwRemovedDisk": "Disk no longer detected",
+  "ignore": "Ignore",
+  "reviewChanges": "Review changes",
+  "rerunWizard": "Re-run setup wizard"
 }

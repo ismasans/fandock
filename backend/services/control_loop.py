@@ -20,10 +20,14 @@ _last_snapshot: dict = {"disks": [], "fans": [], "any_critical": False}
 _known_disks: list[DiskInfo] = []
 _known_fans: list = []
 _test_in_progress: bool = False
+_hardware_change: dict = {"pending": False, "new_disks": [], "removed_disks": []}
+_HARDWARE_RESCAN_EVERY_N_TICKS = 3  # ~30s at 10s poll interval
 
 async def get_last_snapshot() -> dict:
     return _last_snapshot
 
+async def get_hardware_change_status() -> dict:
+    return _hardware_change
 
 async def _control_loop() -> None:
     global _known_disks, _known_fans, _last_snapshot
@@ -36,12 +40,17 @@ async def _control_loop() -> None:
     logger.info(f"Discovered {len(_known_disks)} disk(s): {[d.device for d in _known_disks]}")
     logger.info(f"Discovered {len(_known_fans)} fan(s): {[f.fan_id for f in _known_fans]}")
 
+    tick_count = 0
     while True:
         try:
             if _test_in_progress:
                 await asyncio.sleep(1)
                 continue
             cfg = load_config()
+
+            tick_count += 1
+            if tick_count % _HARDWARE_RESCAN_EVERY_N_TICKS == 0:
+                await _check_hardware_changes(cfg)
 
             if not cfg.monitor_enabled:
                 await asyncio.sleep(cfg.poll_interval_seconds)
@@ -94,6 +103,26 @@ async def _control_loop() -> None:
             logger.exception(f"Control loop error: {exc}")
 
         await asyncio.sleep(cfg.poll_interval_seconds if 'cfg' in dir() else 10)
+
+
+async def _check_hardware_changes(cfg) -> None:
+    global _hardware_change
+    if _hardware_change["pending"]:
+        return  # don't overwrite an unacknowledged change
+    current_disks = await scan_disks()
+    current_serials = {d.serial for d in current_disks if d.serial}
+    known_serials = set(cfg.known_disk_serials)
+    if not known_serials:
+        return  # first scan ever, nothing to compare against
+    new_serials = current_serials - known_serials
+    removed_serials = known_serials - current_serials
+    if new_serials or removed_serials:
+        _hardware_change = {
+            "pending": True,
+            "new_disks": [d.model_dump() for d in current_disks if d.serial in new_serials],
+            "removed_disks": list(removed_serials),
+        }
+        logger.info(f"Hardware change detected: {len(new_serials)} new, {len(removed_serials)} removed")
 
 
 # Entry point called from app lifespan
