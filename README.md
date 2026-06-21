@@ -16,6 +16,34 @@
 - 🌍 i18n-ready UI. Currently includes English, Spanish, French and German. If you’d like to contribute with new languages, please read the [Adding a language](#adding-a-language) section.
 - 🔔 Visual critical alerts (v1.1: email via SMTP)
 
+## Why I built this
+
+I'm a graphic designer, not a developer. My NAS setup (a Fractal Node 804 
+with a dual-chamber design) physically separates the disk bay from the CPU, 
+which means the BIOS fan curves tied to CPU temperatures were completely 
+useless for keeping my drives cool. I looked for existing solutions, tried 
+what was available, and found nothing that did exactly what I needed.
+
+So I decided to build it myself — without knowing how to code.
+
+## How I built it
+
+FanDock was built entirely in collaboration with Claude (Anthropic's AI). 
+I acted as the product owner: defining what I wanted, testing the results 
+on real hardware, and deciding what worked and what didn't. Claude handled 
+the implementation.
+
+I think of it like hiring a contractor: I didn't need to know how to lay 
+bricks to know whether the wall was straight. What I brought to the project 
+was the problem, the hardware context, and the judgment to evaluate results. 
+What Claude brought was the technical execution.
+
+The result is a tool that solves a real problem on real hardware — which is, 
+ultimately, what software is for.
+
+I'm aware the code may have imperfections, and I've only been able to test 
+it on my own setup. If FanDock doesn't work well on your system, please open 
+an issue — every report helps make it better for everyone.
 
 ## Screenshots
 
