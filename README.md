@@ -18,7 +18,7 @@
 
 ## Why I built this
 
-I'm a graphic designer, not a developer. My NAS setup (a Fractal Node 804 
+I'm not a developer. My NAS setup (a Fractal Node 804 
 with a dual-chamber design) physically separates the disk bay from the CPU, 
 which means the BIOS fan curves tied to CPU temperatures were completely 
 useless for keeping my drives cool. I looked for existing solutions, tried 
