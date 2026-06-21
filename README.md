@@ -47,7 +47,7 @@ an issue — every report helps make it better for everyone.
 
 ## Screenshots
 
-<img src="docs/screenshots/dashboard.png" width="700" alt="Dashboard">
+<img src="docs/screenshots/dashboard.gif" width="700" alt="Dashboard">
 <img src="docs/screenshots/curves.png" width="700" alt="Curves">
 <img src="docs/screenshots/settings.png" width="700" alt="Settings">
 
