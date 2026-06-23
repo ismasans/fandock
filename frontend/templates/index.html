@@ -18,8 +18,8 @@
       <p id="loginSubtitle"></p>
     </div>
     <div class="login-err" id="loginErr"></div>
-    <div class="field"><label id="labelUser"></label><input type="text" id="loginUser" placeholder="admin" /></div>
-    <div class="field"><label id="labelPass"></label><input type="password" id="loginPass" placeholder="••••••••" /></div>
+    <div class="field"><label id="labelUser"></label><input type="text" id="loginUser" name="username" autocomplete="username" placeholder="admin" /></div>
+    <div class="field"><label id="labelPass"></label><input type="password" id="loginPass" name="password" autocomplete="current-password" placeholder="••••••••" /></div>
     <div id="defaultCredsHint" style="background:var(--color-background-info);border:0.5px solid var(--color-border-info);border-radius:var(--border-radius-md);padding:.625rem .875rem;font-size:12px;color:var(--color-text-info);margin-bottom:.75rem;">
       <span id="hintDefaultCreds"></span><br>
       <span id="hintDefaultCredsNote"></span><br>
@@ -39,9 +39,9 @@
     </div>
     <div id="wizardStep1">
       <p id="wizStep1Desc" style="font-size:13px;color:var(--color-text-secondary);margin-bottom:1rem;"></p>
-      <div class="field"><label id="labelWizCurrentPwd"></label><input type="password" id="wizPwdCurrent" /></div>
-      <div class="field"><label id="labelWizNewPwd"></label><input type="password" id="wizPwdNew" /></div>
-      <div class="field"><label id="labelWizConfirmPwd"></label><input type="password" id="wizPwdConfirm" /></div>
+      <div class="field"><label id="labelWizCurrentPwd"></label><input type="password" id="wizPwdCurrent" name="current_password" autocomplete="current-password" /></div>
+      <div class="field"><label id="labelWizNewPwd"></label><input type="password" id="wizPwdNew" name="new_password" autocomplete="new-password" /></div>
+      <div class="field"><label id="labelWizConfirmPwd"></label><input type="password" id="wizPwdConfirm" name="confirm_password" autocomplete="new-password" /></div>
       <div class="login-err" id="wizPwdErr"></div>
       <button class="btn btn-primary" id="btnWizSetPwd" style="width:100%;padding:9px;margin-top:.25rem;" onclick="wizardSetPassword()"></button>
     </div>
