@@ -77,6 +77,7 @@ const DISK_THRESHOLDS = {
 
 // ── i18n DOM application ──────────────────────────────────────────────────────
 function applyI18n() {
+  document.documentElement.lang = activeLang;
   const s = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
   const h = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
   s('loginSubtitle', T.loginAppDesc);
