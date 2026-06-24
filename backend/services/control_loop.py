@@ -65,9 +65,6 @@ async def _control_loop() -> None:
             # Build a serial→temp map for fast lookup
             temp_by_serial = {r.serial: r.temperature_c for r in readings if r.serial and r.temperature_c is not None}
 
-            # Read fan statuses
-            fan_statuses = read_fan_statuses(cfg.fans, cfg.unmonitored_fans)
-
             # Apply curves if control is enabled
             if cfg.control_enabled:
                 for fc in cfg.fans:
@@ -92,6 +89,9 @@ async def _control_loop() -> None:
                         logger.warning(f"Could not write PWM to {fc.pwm_path}")
 
             any_critical = any(r.status == "critical" for r in readings)
+
+            # Read fan statuses AFTER applying curves
+            fan_statuses = read_fan_statuses(cfg.fans, cfg.unmonitored_fans)
 
             _last_snapshot = {
                 "disks": [r.model_dump() for r in readings],
