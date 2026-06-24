@@ -72,6 +72,23 @@ body { font-family: var(--font-sans); background: var(--color-background-seconda
 .nav-btn.active { background: var(--color-background-info); color: var(--color-text-info); border-color: var(--color-border-info); }
 .nav-btn:hover:not(.active) { background: var(--color-background-secondary); }
 
+/* Refresh LED */
+#refreshLed {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  vertical-align: middle;
+  margin-left: 8px;
+  background: #199000;
+  box-shadow: 0 0 4px #199000;
+  transition: background 0.1s, box-shadow 0.1s;
+}
+#refreshLed.on {
+  background: #2cff00;
+  box-shadow: 0 0 8px #2cff00;
+}
+
 /* User menu */
 .user-menu { position: relative; }
 .user-btn { font-size: 13px; padding: 5px 12px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: transparent; color: var(--color-text-secondary); cursor: pointer; display: flex; align-items: center; gap: 6px; }

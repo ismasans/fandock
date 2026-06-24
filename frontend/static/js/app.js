@@ -447,6 +447,11 @@ async function fetchSnapshot() {
   renderDiskGrid();
   renderFanPanel();
   if (data.any_critical) showCriticalBanner();
+  const led = document.getElementById('refreshLed');
+  if (led) {
+    led.classList.add('on');
+    setTimeout(() => led.classList.remove('on'), 400);
+  }
 }
 
 async function forceRefresh() {
