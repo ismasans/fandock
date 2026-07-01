@@ -437,6 +437,7 @@ function stopPolling() {
   clearInterval(pollTimer);
   clearInterval(_refreshTimer);
   clearTimeout(_idleTimer);
+  if (_fanAnimFrame) { clearInterval(_fanAnimFrame); _fanAnimFrame = null; }
 }
 
 async function fetchSnapshot() {
@@ -503,13 +504,14 @@ function renderDiskGrid() {
 
 const _fanRotations = {};
 let _fanAnimFrame = null;
-let _fanLastTs = null;
 let _fanDisplayedRpms = {};
+let _fanLastAnimTs = null;
 
-function _fanAnimate(ts) {
-  if (!_fanLastTs) _fanLastTs = ts;
-  const dt = Math.min((ts - _fanLastTs) / 1000, 0.05);
-  _fanLastTs = ts;
+function _fanAnimateTick() {
+  const now = performance.now();
+  if (!_fanLastAnimTs) _fanLastAnimTs = now;
+  const dt = Math.min((now - _fanLastAnimTs) / 1000, 0.1);
+  _fanLastAnimTs = now;
   serverFans.forEach(f => {
     if (!_fanRotations[f.fan_id]) _fanRotations[f.fan_id] = 0;
     const rpm = f.current_rpm || 0;
@@ -524,7 +526,6 @@ function _fanAnimate(ts) {
     const icon = document.getElementById(`fan-icon-${f.fan_id}`);
     if (icon) icon.setAttribute('transform', `translate(70,70) rotate(${_fanRotations[f.fan_id].toFixed(1)})`);
   });
-  _fanAnimFrame = requestAnimationFrame(_fanAnimate);
 }
 
 function _fanArcD(pct) {
@@ -540,7 +541,7 @@ function _fanArcD(pct) {
 
 function renderFanPanel() {
   const panel = document.getElementById('fanPanel');
-  if (_fanAnimFrame) { cancelAnimationFrame(_fanAnimFrame); _fanAnimFrame = null; _fanLastTs = null; }
+  if (_fanAnimFrame) { clearInterval(_fanAnimFrame); _fanAnimFrame = null; _fanLastAnimTs = null; }
   panel.innerHTML = '';
   panel.style.cssText = 'display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:12px;';
 
@@ -607,7 +608,11 @@ function renderFanPanel() {
     panel.appendChild(card);
   });
 
-  if (serverFans.length > 0) requestAnimationFrame(_fanAnimate);
+  if (serverFans.length > 0) {
+    if (_fanAnimFrame) clearInterval(_fanAnimFrame);
+    _fanLastAnimTs = null;
+    _fanAnimFrame = setInterval(_fanAnimateTick, 100);
+  }
 }
 
 function showCriticalBanner() {
