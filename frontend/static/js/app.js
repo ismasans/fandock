@@ -583,9 +583,9 @@ function renderFanPanel() {
     const fanImg = document.createElement('img');
     fanImg.id = `fan-icon-${f.fan_id}`;
     fanImg.src = '/static/img/fan.png';
-    fanImg.width = 70;
-    fanImg.height = 70;
-    fanImg.style.cssText = 'display:block; margin:-87px auto 17px; pointer-events:none;';
+    fanImg.width = 90;
+    fanImg.height = 90;
+    fanImg.style.cssText = 'display:block; margin:-115px auto 17px; pointer-events:none;';
     fanImg.style.filter = window.matchMedia('(prefers-color-scheme: dark)').matches
       ? 'opacity(0.7)'
       : 'opacity(0.7) invert(1)';
