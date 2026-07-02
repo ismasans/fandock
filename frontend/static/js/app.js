@@ -613,8 +613,9 @@ function renderFanPanel() {
     panel.appendChild(card);
   });
 
+  clearInterval(_fanAnimFrame);
+  _fanAnimFrame = null;
   if (serverFans.length > 0) {
-    if (_fanAnimFrame) clearInterval(_fanAnimFrame);
     _fanAnimFrame = setInterval(_fanAnimate, 42);
   }
 }
