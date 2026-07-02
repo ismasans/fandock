@@ -437,6 +437,7 @@ function stopPolling() {
   clearInterval(pollTimer);
   clearInterval(_refreshTimer);
   clearTimeout(_idleTimer);
+  if (_fanAnimFrame) { clearInterval(_fanAnimFrame); _fanAnimFrame = null; }
 }
 
 async function fetchSnapshot() {
@@ -507,7 +508,8 @@ let _fanLastTs = null;
 let _fanDisplayedRpms = {};
 let _fanSpeedFactor = 0.75; // ajustable desde consola: _fanSpeedFactor = 0.5
 
-function _fanAnimate(ts) {
+function _fanAnimate() {
+  const ts = performance.now();
   if (!_fanLastTs) _fanLastTs = ts;
   const dt = Math.min((ts - _fanLastTs) / 1000, 0.05);
   _fanLastTs = ts;
@@ -541,7 +543,7 @@ function _fanArcD(pct) {
 
 function renderFanPanel() {
   const panel = document.getElementById('fanPanel');
-  if (_fanAnimFrame) { cancelAnimationFrame(_fanAnimFrame); _fanAnimFrame = null; _fanLastTs = null; }
+  if (_fanAnimFrame) { clearInterval(_fanAnimFrame); _fanAnimFrame = null; _fanLastTs = null; }
   panel.innerHTML = '';
   panel.style.cssText = 'display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:12px;';
 
@@ -611,7 +613,10 @@ function renderFanPanel() {
     panel.appendChild(card);
   });
 
-  if (serverFans.length > 0) requestAnimationFrame(_fanAnimate);
+  if (serverFans.length > 0) {
+    if (_fanAnimFrame) clearInterval(_fanAnimFrame);
+    _fanAnimFrame = setInterval(_fanAnimate, 42);
+  }
 }
 
 function showCriticalBanner() {
