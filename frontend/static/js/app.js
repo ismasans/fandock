@@ -505,6 +505,7 @@ const _fanRotations = {};
 let _fanAnimFrame = null;
 let _fanLastTs = null;
 let _fanDisplayedRpms = {};
+let _fanSpeedFactor = 0.75; // ajustable desde consola: _fanSpeedFactor = 0.5
 
 function _fanAnimate(ts) {
   if (!_fanLastTs) _fanLastTs = ts;
@@ -520,9 +521,9 @@ function _fanAnimate(ts) {
     const alpha = 1 - Math.exp(-dt / tau);
     _fanDisplayedRpms[f.fan_id] += (rpm - _fanDisplayedRpms[f.fan_id]) * alpha;
     const usedRpm = _fanDisplayedRpms[f.fan_id];
-    _fanRotations[f.fan_id] = (_fanRotations[f.fan_id] + usedRpm * dt) % 360;
+    _fanRotations[f.fan_id] = (_fanRotations[f.fan_id] + usedRpm * _fanSpeedFactor * dt) % 360;
     const icon = document.getElementById(`fan-icon-${f.fan_id}`);
-    if (icon) icon.setAttribute('transform', `translate(70,70) rotate(${_fanRotations[f.fan_id].toFixed(1)})`);
+    if (icon) icon.style.transform = `rotate(${_fanRotations[f.fan_id].toFixed(1)}deg)`;
   });
   _fanAnimFrame = requestAnimationFrame(_fanAnimate);
 }
@@ -577,32 +578,35 @@ function renderFanPanel() {
     fill.setAttribute('stroke-linecap', 'round');
     svg.appendChild(fill);
 
-    const iconG = document.createElementNS(ns, 'g');
-    iconG.id = `fan-icon-${f.fan_id}`;
-    iconG.setAttribute('transform', `translate(${CX},${CY})`);
-    for (let i = 0; i < 4; i++) {
-      const blade = document.createElementNS(ns, 'ellipse');
-      blade.setAttribute('cx', (bladeR * 0.45).toFixed(1));
-      blade.setAttribute('cy', '0');
-      blade.setAttribute('rx', (bladeR * 0.45).toFixed(1));
-      blade.setAttribute('ry', (bladeR * 0.22).toFixed(1));
-      blade.setAttribute('fill', 'var(--color-text-secondary)');
-      blade.setAttribute('opacity', '0.9');
-      blade.setAttribute('transform', `rotate(${i * 90})`);
-      iconG.appendChild(blade);
-    }
-    const hub = document.createElementNS(ns, 'circle');
-    hub.setAttribute('cx', '0'); hub.setAttribute('cy', '0');
-    hub.setAttribute('r', (bladeR * 0.14).toFixed(1));
-    hub.setAttribute('fill', 'var(--color-text-primary)');
-    iconG.appendChild(hub);
-    svg.appendChild(iconG);
     card.appendChild(svg);
 
-    card.innerHTML += `
-      <div style="font-size:13px; font-weight:500; color:var(--color-text-primary); margin-top:4px;">${label}</div>
-      <div id="fan-pct-${f.fan_id}" style="font-size:20px; font-weight:500; color:var(--color-text-primary);">${Math.round(pct * 100)}%</div>
-      <div id="fan-rpm-${f.fan_id}" style="font-size:12px; color:var(--color-text-secondary);">${rpm === 0 ? T.fanStopped : rpm + ' rpm'}</div>`;
+    const fanImg = document.createElement('img');
+    fanImg.id = `fan-icon-${f.fan_id}`;
+    fanImg.src = '/static/img/fan.png';
+    fanImg.width = 70;
+    fanImg.height = 70;
+    fanImg.style.cssText = 'display:block; margin:-87px auto 17px; pointer-events:none;';
+    fanImg.style.filter = window.matchMedia('(prefers-color-scheme: dark)').matches
+      ? 'opacity(0.7)'
+      : 'opacity(0.7) invert(1)';
+    card.appendChild(fanImg);
+
+    const labelDiv = document.createElement('div');
+    labelDiv.style.cssText = 'font-size:13px; font-weight:500; color:var(--color-text-primary); margin-top:4px;';
+    labelDiv.textContent = label;
+    card.appendChild(labelDiv);
+
+    const pctDiv = document.createElement('div');
+    pctDiv.id = `fan-pct-${f.fan_id}`;
+    pctDiv.style.cssText = 'font-size:20px; font-weight:500; color:var(--color-text-primary);';
+    pctDiv.textContent = `${Math.round(pct * 100)}%`;
+    card.appendChild(pctDiv);
+
+    const rpmDiv = document.createElement('div');
+    rpmDiv.id = `fan-rpm-${f.fan_id}`;
+    rpmDiv.style.cssText = 'font-size:12px; color:var(--color-text-secondary);';
+    rpmDiv.textContent = rpm === 0 ? T.fanStopped : `${rpm} rpm`;
+    card.appendChild(rpmDiv);
 
     panel.appendChild(card);
   });
