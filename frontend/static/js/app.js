@@ -540,9 +540,10 @@ function _fanArcD(pct) {
   return `M ${s.x.toFixed(2)} ${s.y.toFixed(2)} A ${R} ${R} 0 ${sweep > 180 ? 1 : 0} 1 ${e.x.toFixed(2)} ${e.y.toFixed(2)}`;
 }
 
-function renderFanPanel() {
+function _buildFanPanel() {
   const panel = document.getElementById('fanPanel');
-  if (_fanAnimFrame) { clearInterval(_fanAnimFrame); _fanAnimFrame = null; _fanLastTs = null; }
+  if (panel.dataset.built === '1') return;
+  panel.dataset.built = '1';
   panel.innerHTML = '';
   panel.style.cssText = 'display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:12px;';
 
@@ -612,11 +613,26 @@ function renderFanPanel() {
     panel.appendChild(card);
   });
 
-  clearInterval(_fanAnimFrame);
-  _fanAnimFrame = null;
-  if (serverFans.length > 0) {
+  if (serverFans.length > 0 && !_fanAnimFrame) {
     _fanAnimFrame = setInterval(_fanAnimate, 42);
   }
+}
+
+function renderFanPanel() {
+  _buildFanPanel();
+  serverFans.forEach(f => {
+    const pct = f.current_pwm / 255;
+    const rpm = f.current_rpm || 0;
+    const arc = document.getElementById(`fan-arc-${f.fan_id}`);
+    if (arc) {
+      arc.setAttribute('d', _fanArcD(pct));
+      arc.setAttribute('stroke', rpm === 0 ? 'var(--color-border-tertiary)' : '#378ADD');
+    }
+    const pctDiv = document.getElementById(`fan-pct-${f.fan_id}`);
+    if (pctDiv) pctDiv.textContent = `${Math.round(pct * 100)}%`;
+    const rpmDiv = document.getElementById(`fan-rpm-${f.fan_id}`);
+    if (rpmDiv) rpmDiv.textContent = rpm === 0 ? T.fanStopped : `${rpm} rpm`;
+  });
 }
 
 function showCriticalBanner() {
@@ -969,6 +985,8 @@ async function rescanHardware() {
   badge.textContent = T.scanned; badge.style.background = ''; badge.style.color = '';
   if (data) {
     serverDisks = data.disks; allDisks = data.disks; serverFans = data.fans;
+    const panel = document.getElementById('fanPanel');
+    if (panel) { panel.dataset.built = ''; clearInterval(_fanAnimFrame); _fanAnimFrame = null; _fanLastTs = null; }
     settingsData = await api('GET', '/settings/');
     allFans = settingsData.all_fans || data.fans;
     buildDiskCfg(settingsData); buildFanCfg(settingsData);
