@@ -527,7 +527,6 @@ function _fanAnimate() {
     const icon = document.getElementById(`fan-icon-${f.fan_id}`);
     if (icon) icon.style.transform = `rotate(${_fanRotations[f.fan_id].toFixed(1)}deg)`;
   });
-  _fanAnimFrame = requestAnimationFrame(_fanAnimate);
 }
 
 function _fanArcD(pct) {
