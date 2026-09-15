@@ -36,6 +36,31 @@ docker-compose.yml            # Dev setup with volume mounts for hot reload
 
 ---
 
+## Architecture at a Glance
+
+```
+frontend/
+├── static/js/app.js          # Vanilla JS, i18n, API wrapper, 5s polling loop
+├── static/js/i18n/*.json     # Translations (en, es, fr, de currently)
+└── templates/index.html      # Single-page app (no build step)
+
+backend/
+├── main.py                   # FastAPI app, lifespan events, CORS setup
+├── routers/auth.py           # JWT authentication, token lifecycle
+├── routers/{dashboard,fans,settings}.py  # API endpoints
+└── services/
+    ├── control_loop.py       # Background AsyncIO task (5–30s polling)
+    ├── fan_service.py        # sysfs PWM writes, fan discovery
+    ├── smart_service.py      # smartctl JSON parsing, temp monitoring
+    └── config_service.py     # JSON persistence + bcrypt password hashing
+
+config/config.json            # Persisted config (fans, disks, curves, password hash)
+Dockerfile                    # Base: python:3.13-slim + system tools
+docker-compose.yml            # Dev setup with volume mounts for hot reload
+```
+
+---
+
 ## Key Architectural Patterns
 
 ### Backend
@@ -44,6 +69,7 @@ docker-compose.yml            # Dev setup with volume mounts for hot reload
 - **Control Loop**: AsyncIO background task runs every 5–30 seconds, applies fan curves based on disk temps, detects hardware changes.
 - **Schema Validation**: Pydantic models in `models/schemas.py` validate all API inputs/outputs.
 - **Error Handling**: `HTTPException` with status codes (401, 404, 400).
+- **Async Execution**: Uses `loop.run_in_executor()` to avoid blocking the event loop when calling `smartctl` and sysfs operations.
 
 **Example pattern** (adding a new endpoint):
 1. Add route to router: `@router.get("/api/resource") async def resource(_user: str = Depends(get_current_user))`
@@ -54,7 +80,7 @@ docker-compose.yml            # Dev setup with volume mounts for hot reload
 - **No build step**: Static files served directly; JavaScript runs in browser.
 - **i18n**: All strings in `T.keyName` (JS) or `id="keyName"` (HTML). JSON files in `frontend/static/js/i18n/`.
 - **API Wrapper**: `async api(method, path, body)` handles JWT bearer token, 401 redirect, error logging.
-- **State**: Global: `token`, `unit`, `allDisks`, `allFans`, `curves`, `settingsData`.
+- **State**: Global: `token`, `unit`, `serverDisks`, `serverFans`, `allDisks`, `allFans`, `curves`, `settingsData`, `chart`, `availableLangs`.
 - **Polling**: Dashboard polls `/api/dashboard/snapshot` every 5 seconds (when tab is active).
 - **Session**: 15-minute token validity, auto-refresh 1 minute before expiry, 5-minute inactivity logout.
 
@@ -165,8 +191,8 @@ docker-compose up
 ### Debugging a Hardware Issue
 - Check `control_loop.py` for polling logic and state cache.
 - `fan_service.py`: PWM discovery via glob `/sys/class/hwmon/*/pwm*`.
-- `smart_service.py`: Disk discovery via `smartctl --scan-open` (JSON).
-- Look at `allDisks` and `allFans` in browser console for current state.
+- `smart_service.py`: Disk discovery via `lsblk` and `smartctl --json -A`.
+- Look at `serverDisks` and `serverFans` in browser console for current state.
 
 ---
 
@@ -184,7 +210,7 @@ docker-compose up
 
 6. **No Database**: All persistence is JSON in `/app/config/`. No migrations, no transactions. Keep config structure simple.
 
-7. **Blocking Calls**: Control loop uses `subprocess.run()` for `smartctl` and sysfs writes. In the future, consider async wrappers to avoid blocking the event loop.
+7. **Async Execution**: Control loop uses `loop.run_in_executor()` for `smartctl` and sysfs operations to avoid blocking the event loop.
 
 ---
 
@@ -208,6 +234,12 @@ docker-compose up
 
 ---
 
+## Hardware Scanning
+
+- **POST /settings/scan**: Discover and initialize hardware (disks and fans). Returns `all_disks` and `all_fans` for UI initialization.
+
+---
+
 ## Related Resources
 
 - [CONTRIBUTING.md](CONTRIBUTING.md) — Branch model, commit style, language contribution process
@@ -217,9 +249,3 @@ docker-compose up
 - [docker-compose.yml](docker-compose.yml) — Development setup
 
 ---
-
-## Getting Help
-
-- **Issues**: Describe the problem, steps to reproduce, hardware, and FanDock version.
-- **PRs**: Always target `dev` branch; reference issue number.
-- **Questions**: Open a discussion or issue on GitHub.
